@@ -1,19 +1,20 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
 import { addEntry } from '$lib/Entries';
 
 describe('Entries', () => {
-	const currentDate = new Date('2018-09-20T23:00:00Z');
+	let date: Date;
 
 	beforeAll(() => {
-		Date = class extends Date {
-			constructor(date: string) {
-				if (date) {
-					return super(date);
-				}
+		date = new Date();
+	});
 
-				return currentDate;
-			}
-		};
+	beforeEach(() => {
+		vi.useFakeTimers();
+		vi.setSystemTime(date);
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	it('adds new entry to empty list', () => {
@@ -21,7 +22,7 @@ describe('Entries', () => {
 			ok: [
 				{
 					id: '', // TODO: generate guid
-					startTime: currentDate,
+					startTime: date,
 					title: ''
 				}
 			]
@@ -33,7 +34,7 @@ describe('Entries', () => {
 			addEntry([
 				{
 					id: '', // TODO: generate guid
-					startTime: new Date(),
+					startTime: date,
 					title: ''
 				}
 			])
