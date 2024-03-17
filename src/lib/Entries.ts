@@ -1,5 +1,11 @@
+const entryOpen = (entry: TimeEntry) => !entry.endTime;
+
+export const hasOpenEntry = (entries: TimeEntry[]) => entries.some(entryOpen);
+
+export const openEntry = (entries: TimeEntry[]) => entries.find(entryOpen);
+
 export const addEntry = (entries: TimeEntry[], entry?: TimeEntry) => {
-	if (entryOpen(entries)) {
+	if (hasOpenEntry(entries)) {
 		return {
 			err: "There's already a timer running"
 		};
@@ -19,5 +25,3 @@ export const addEntry = (entries: TimeEntry[], entry?: TimeEntry) => {
 		ok: _entries
 	};
 };
-
-const entryOpen = (entries: TimeEntry[]) => entries.some((e) => !e.endTime);
