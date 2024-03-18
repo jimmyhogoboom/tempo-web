@@ -8,7 +8,7 @@
 	$: currentEntry = openEntry($entries);
 
 	const handleStartClick = () =>
-		entries.update((es: TimeEntry[]) => {
+		entries.update((es) => {
 			// TODO: get reference to new entry to allow for updating on stop
 			const r = addEntry(es);
 
