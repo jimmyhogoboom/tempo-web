@@ -1,37 +1,17 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { addEntry, openEntry } from '$lib/Entries';
 	import { entries } from '$stores/stores';
-	import { format, interval, intervalToDuration, type Duration } from 'date-fns/fp';
-
-	const zeroPad = (num: number = 0) => String(num).padStart(2, '0');
-	const timerFormat = (duration: Duration) =>
-		`${zeroPad(duration.hours)}:${zeroPad(duration.minutes)}:${zeroPad(duration.seconds)}`;
-	const dateFormat = (date?: Date) => (date ? format('h:m aa', date) : '');
-
-	let currentTime = new Date();
-	let intervalTimeout: NodeJS.Timeout | null = null;
+	import { dateFormat } from '$lib/utils/dateUtils';
+	import { addEntry, openEntry } from '$lib/Entries';
+	import Timer from '$components/Timer.svelte';
+	import EntryTime from '$components/EntryTime.svelte';
 
 	$: currentEntry = openEntry($entries);
-	$: elapsed = currentEntry
-		? intervalToDuration(interval(currentTime, currentEntry.startTime))
-		: {};
-	$: formatted = timerFormat(elapsed);
-
-	onMount(() => {
-		intervalTimeout = setInterval(() => {
-			currentTime = new Date();
-		}, 1000);
-	});
-	onDestroy(() => {
-		if (intervalTimeout != null) {
-			clearInterval(intervalTimeout);
-		}
-	});
 
 	const handleStartClick = () =>
 		entries.update((es: TimeEntry[]) => {
+			// TODO: get reference to new entry to allow for updating on stop
 			const r = addEntry(es);
+
 			if (r.ok) return r.ok;
 
 			// TODO: better error message handling
@@ -39,16 +19,21 @@
 
 			return es;
 		});
+
+	const handleStopClick = () => {};
 </script>
 
 <div>
-	<div>{formatted}</div>
-
-	<button on:click={handleStartClick}>Start</button>
+	<Timer entry={currentEntry} onStart={handleStartClick} onStop={handleStopClick} />
 
 	<ul>
 		{#each $entries as entry}
-			<li>{entry.title} {dateFormat(entry.startTime)} {dateFormat(entry.endTime)} {formatted}</li>
+			<li>
+				{entry.title}
+				{dateFormat(entry.startTime)}
+				{dateFormat(entry.endTime)}
+				<EntryTime {entry} />
+			</li>
 		{/each}
 	</ul>
 </div>

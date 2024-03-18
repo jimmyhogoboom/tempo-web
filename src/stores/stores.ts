@@ -1,6 +1,19 @@
-import { writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 
 export const entries = writable([] as TimeEntry[]);
+
+// This helps the time initialize as quickly as possible
+const INIT_DATE = new Date();
+
+export const time = readable<Date>(INIT_DATE, (set) => {
+	const interval = setInterval(() => {
+		set(new Date());
+	}, 1000);
+
+	return () => {
+		clearInterval(interval);
+	};
+});
 
 // function createListStore(listName) {
 // 	const store = writable({});
