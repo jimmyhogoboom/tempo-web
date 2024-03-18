@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
 import { addEntry } from '$lib/Entries';
+import { ok, err } from 'true-myth/result';
 
 describe('Entries', () => {
 	let date: Date;
@@ -18,15 +19,17 @@ describe('Entries', () => {
 	});
 
 	it('adds new entry to empty list', () => {
-		expect(addEntry([])).toStrictEqual({
-			ok: [
-				{
-					id: '', // TODO: generate guid
-					startTime: date,
-					title: ''
-				}
-			]
-		});
+		const expectedEntry = {
+			id: '', // TODO: generate guid
+			startTime: date,
+			title: ''
+		};
+		expect(addEntry([])).toStrictEqual(
+			ok({
+				entries: [expectedEntry],
+				entry: expectedEntry
+			})
+		);
 	});
 
 	it('forbids adding open entry when one already exists', () => {
@@ -38,8 +41,6 @@ describe('Entries', () => {
 					title: ''
 				}
 			])
-		).toStrictEqual({
-			err: "There's already a timer running"
-		});
+		).toStrictEqual(err("There's already a timer running"));
 	});
 });

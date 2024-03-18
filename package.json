@@ -37,6 +37,7 @@
   },
   "type": "module",
   "dependencies": {
-    "date-fns": "^3.5.0"
+    "date-fns": "^3.5.0",
+    "true-myth": "^7.1.0"
   }
 }

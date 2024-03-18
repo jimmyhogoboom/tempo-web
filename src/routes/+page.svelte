@@ -12,10 +12,10 @@
 			// TODO: get reference to new entry to allow for updating on stop
 			const r = addEntry(es);
 
-			if (r.ok) return r.ok;
+			if (r.isOk) return r.value.entries;
 
 			// TODO: better error message handling
-			console.error(r.err);
+			console.error(r.error);
 
 			return es;
 		});
