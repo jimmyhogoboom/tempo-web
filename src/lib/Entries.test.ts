@@ -1,7 +1,14 @@
 import { beforeAll, beforeEach, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
-import { addEntry, updateEntry } from '$lib/Entries';
+import { buildEntries } from '$lib/Entries';
 import { ok, err } from 'true-myth/result';
 import { addHours } from 'date-fns/fp';
+
+const mockCrypto = (uuid: UUID) => ({
+	randomUUID: (): UUID => uuid
+});
+
+const mockId = crypto.randomUUID();
+const { addEntry, updateEntry } = buildEntries(mockCrypto(mockId));
 
 describe('Entries', () => {
 	let date: Date;
@@ -22,7 +29,7 @@ describe('Entries', () => {
 	describe('addEntry', () => {
 		it('adds new entry to empty list', () => {
 			const expectedEntry = {
-				id: '', // TODO: generate guid
+				id: mockId,
 				startTime: date,
 				title: ''
 			};
@@ -38,7 +45,7 @@ describe('Entries', () => {
 			expect(
 				addEntry([
 					{
-						id: '', // TODO: generate guid
+						id: crypto.randomUUID(),
 						startTime: date,
 						title: ''
 					}
@@ -52,12 +59,12 @@ describe('Entries', () => {
 		beforeAll(() => {
 			existingEntries = [
 				{
-					id: '', // TODO: generate guid
+					id: mockId,
 					startTime: date,
-					title: ''
+					title: 'old title'
 				},
 				{
-					id: 'a different id',
+					id: crypto.randomUUID(),
 					startTime: date,
 					title: 'the other one'
 				}
@@ -66,19 +73,19 @@ describe('Entries', () => {
 
 		it('updates expected entry', () => {
 			const endDate = addHours(2, date);
-			const title = 'new title';
+			const newTitle = 'new title';
 			const expectedEntry = {
-				id: '', // TODO: generate guid
+				id: mockId,
 				startTime: date,
 				endTime: endDate,
-				title
+				title: newTitle
 			};
 
 			expect(
 				updateEntry(existingEntries, {
-					id: '', // TODO: fill
+					id: mockId,
 					endTime: endDate,
-					title
+					title: newTitle
 				})
 			).toStrictEqual(
 				ok({
@@ -87,6 +94,16 @@ describe('Entries', () => {
 			);
 		});
 
-		it.todo('fails when non-existant entry is updated', () => {});
+		it('fails when non-existant entry is updated', () => {
+      const nonExistant = crypto.randomUUID();
+			expect(
+				updateEntry(existingEntries, {
+					id: nonExistant,
+					title: 'this should fail'
+				})
+			).toStrictEqual(
+				err(`Entry with id ${nonExistant} does not exist`)
+			);
+    });
 	});
 });

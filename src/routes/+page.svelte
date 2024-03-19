@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { entries } from '$stores/stores';
 	import { dateFormat } from '$lib/utils/dateUtils';
-	import { addEntry, openEntry, updateEntry } from '$lib/Entries';
+	import Entries from '$lib/Entries';
 	import Timer from '$components/Timer.svelte';
 	import EntryTime from '$components/EntryTime.svelte';
+	import { unwrapOr } from 'true-myth/result';
 
-	$: currentEntry = openEntry($entries);
+	const { addEntry, openEntry, updateEntry } = Entries;
+
+	$: currentEntry = unwrapOr(undefined, openEntry($entries));
 
 	const handleStartClick = () =>
 		entries.update((es) => {
@@ -20,18 +23,21 @@
 			return es;
 		});
 
-	const handleStopClick = () =>
-		currentEntry &&
-		entries.update((es) => {
-			const r = updateEntry(es, { id: currentEntry.id, endTime: new Date() });
+	const handleStopClick = () => {
+		if (currentEntry) {
+      const id = currentEntry.id;
+			entries.update((es) => {
+				const r = updateEntry(es, { id, endTime: new Date() });
 
-			if (r.isOk) return r.value.entries;
+				if (r.isOk) return r.value.entries;
 
-			// TODO: better error message handling
-			console.error(r.error);
+				// TODO: better error message handling
+				console.error(r.error);
 
-			return es;
-		});
+				return es;
+			});
+		}
+	};
 </script>
 
 <div class="full background-dark">
