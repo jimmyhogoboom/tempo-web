@@ -3,10 +3,13 @@
 	import { time } from '$stores/stores';
 	import { timerFormat } from '$lib/utils/dateUtils';
 
-	export let entry;
+	export let entry: TimeEntry | undefined;
 
-	$: elapsed = entry ? intervalToDuration(interval($time, entry.startTime)) : {};
-	$: formatted = timerFormat(elapsed);
+	const formattedInterval = (end?: Date, start?: Date) =>
+		timerFormat(end && start && intervalToDuration(interval(end, start)));
+
+	$: stopTime = entry?.endTime ?? $time;
+	$: formatted = formattedInterval(stopTime, entry?.startTime);
 </script>
 
 <div>{formatted}</div>

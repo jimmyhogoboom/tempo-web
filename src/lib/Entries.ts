@@ -23,7 +23,7 @@ export const addEntry = (
 	}
 
 	const _entry = entry ?? {
-		id: '', // TODO: generate guid
+		id: '', // TODO: generate guid: crypto.randomUUID()
 		startTime: new Date(),
 		title: ''
 	};
