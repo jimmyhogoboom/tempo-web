@@ -1,6 +1,7 @@
+import { LocalStorageService, type IStorable } from '$lib/utils/LocalStorageService';
 import { readable, writable } from 'svelte/store';
 
-export const entries = writable([] as TimeEntry[]);
+export const entries = createListStore<TimeEntry>('entry');
 
 // This helps the time initialize as quickly as possible
 const INIT_DATE = new Date();
@@ -15,35 +16,38 @@ export const time = readable<Date>(INIT_DATE, (set) => {
 	};
 });
 
-// function createListStore(listName) {
-// 	const store = writable({});
+function createListStore<T extends IStorable>(listName: string) {
+	const storage = new LocalStorageService<T>(listName);
+	const store = writable(storage.getAll());
 
-// 	return {
-// 		...store,
-// 		init: async () => {
-// 			const items = dbfun.getListItems(listName);
-// 			items.then((values) => {
-// 				values ? store.set(values) : store.set([]);
-// 			});
-// 			return items;
-// 		},
-// 		set: async (newVal) => {
-// 			const id = Number(newVal.id);
-// 			if (id) {
-// 				await dbfun.updateItemInList(listName, id, newVal);
-// 			} else {
-// 				await dbfun.addToList(listName, newVal);
-// 			}
-// 			store.set(await dbfun.getListItems(listName));
-// 		},
-// 		delete: async (id) => {
-// 			if (listName === 'inventory') {
-// 				await dbfun.deleteItemFromRecipes(id);
-// 				// TODO:
-// 				// recipes store needs to be re-initialized after this
-// 			}
-// 			await dbfun.deleteFromList(listName, id);
-// 			store.set(await dbfun.getListItems(listName));
-// 		}
-// 	};
-// }
+	return {
+		...store,
+		update: (predicate: (items: T[]) => T[]) => {
+			const items = storage.getAll();
+			const newItems = predicate(items);
+			store.set(newItems);
+			storage.set(newItems);
+		}
+		// init: async () => {
+		// 	const items = storage.getAll();
+		// 	store.set(items);
+		// 	return items;
+		// },
+		// add: (item: Omit<T, 'id'>) => {
+		// 	const { item: newItem, items } = storage.add(item);
+		// 	store.set(items);
+		// 	return newItem;
+		// },
+		// update: (item: T) => {
+		// 	const found = storage.get(item.id);
+		// 	if (found.isNothing) {
+		// 		return err(`No item with id ${item.id} in ${listName}`);
+		// 	}
+		// 	store.set(storage.getAll().map((i) => (i.id === item.id ? item : i)));
+		// },
+		// delete: async (id: UUID) => {
+		// 	const { items } = storage.remove(id);
+		// 	store.set(items);
+		// }
+	};
+}

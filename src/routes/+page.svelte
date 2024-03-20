@@ -25,7 +25,7 @@
 
 	const handleStopClick = () => {
 		if (currentEntry) {
-      const id = currentEntry.id;
+			const id = currentEntry.id;
 			entries.update((es) => {
 				const r = updateEntry(es, { id, endTime: new Date() });
 

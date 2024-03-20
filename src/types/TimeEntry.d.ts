@@ -1,12 +1,12 @@
 type TimeEntry = {
-	id: string;
+	id: UUID;
 	startTime: Date;
 	endTime?: Date;
 	title: string;
 };
 
 type TimeEntryUpdate = {
-	id: string;
+	id: UUID;
 	startTime?: Date;
 	endTime?: Date;
 	title?: string;

@@ -18,13 +18,13 @@ export function buildEntries(_crypto: ICrypto) {
 	const hasOpenEntry = (entries: TimeEntry[]) => entries.some(entryOpen);
 
 	const openEntry = (entries: TimeEntry[]): Result<TimeEntry, string> => {
-    const entry = entries.find(entryOpen);
-    if (entry) {
-      return ok(entry);
-    }
+		const entry = entries.find(entryOpen);
+		if (entry) {
+			return ok(entry);
+		}
 
-    return err('No open entries');
-  }
+		return err('No open entries');
+	};
 
 	const hasEntry = (entries: TimeEntry[], entryId: string) => entries.some(hasId(entryId));
 
