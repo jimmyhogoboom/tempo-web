@@ -6,7 +6,7 @@
 	import EntryTime from '$components/EntryTime.svelte';
 	import { unwrapOr } from 'true-myth/result';
 
-	const { addEntry, openEntry, updateEntry } = Entries;
+	const { addEntry, openEntry, updateEntry, deleteEntry, entryOpen } = Entries;
 
 	const existingOpenEntry = unwrapOr(undefined, openEntry($entries));
 
@@ -79,6 +79,20 @@
 									endTime: undefined,
 									id: undefined
 								})}>Copy</button
+						>
+					{/if}
+					{#if entry && !entryOpen(entry)}
+						<button
+							on:click={() => {
+								if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+									if (currentEntry?.id === entry.id) {
+										currentEntry = undefined;
+									}
+									entries.update((es) => {
+										return deleteEntry(es, entry.id);
+									});
+								}
+							}}>Delete</button
 						>
 					{/if}
 				</li>

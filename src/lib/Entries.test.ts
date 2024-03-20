@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { buildEntries, type NewTimeEntry } from '$lib/Entries';
+import { initEntries, type NewTimeEntry } from '$lib/Entries';
 import { ok, err } from 'true-myth/result';
 import { addHours } from 'date-fns/fp';
 
@@ -8,7 +8,7 @@ const mockCrypto = (uuid: UUID) => ({
 });
 
 const mockId = crypto.randomUUID();
-const { addEntry, updateEntry } = buildEntries(mockCrypto(mockId));
+const { addEntry, updateEntry, deleteEntry } = initEntries(mockCrypto(mockId));
 
 describe('Entries', () => {
 	let date: Date;
@@ -122,6 +122,28 @@ describe('Entries', () => {
 					title: 'this should fail'
 				})
 			).toStrictEqual(err(`Entry with id ${nonExistant} does not exist`));
+		});
+	});
+
+	describe('deleteEntry', () => {
+		let existingEntries: TimeEntry[];
+		beforeAll(() => {
+			existingEntries = [
+				{
+					id: mockId,
+					startTime: date,
+					title: 'delete me'
+				},
+				{
+					id: crypto.randomUUID(),
+					startTime: date,
+					title: 'the other one'
+				}
+			];
+		});
+
+		it('removes expected entry', () => {
+			expect(deleteEntry(existingEntries, mockId)).toStrictEqual([existingEntries[1]]);
 		});
 	});
 });

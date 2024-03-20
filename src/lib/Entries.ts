@@ -21,7 +21,7 @@ type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
 const replaceProps = <T, U>(existing: T, replace: U): T => ({ ...existing, ...replace });
 
-export function buildEntries(_crypto: ICrypto) {
+export function initEntries(_crypto: ICrypto) {
 	/**
 	 * True if the entry has no endTime, and is therefore currently being tracked
 	 */
@@ -94,14 +94,24 @@ export function buildEntries(_crypto: ICrypto) {
 		return ok({ entries, entry: newEntry } as UpdateEntryOutput);
 	};
 
+	const deleteEntry = (entries: TimeEntry[], id: UUID) => {
+		const entry = getEntry(entries, id);
+		if (entry.isNothing) {
+			return entries;
+		}
+
+		return entries.filter((e) => e.id !== id);
+	};
+
 	return {
 		entryOpen,
 		hasOpenEntry,
 		openEntry,
 		hasEntry,
 		addEntry,
-		updateEntry
+		updateEntry,
+		deleteEntry
 	};
 }
 
-export default buildEntries(crypto);
+export default initEntries(crypto);
