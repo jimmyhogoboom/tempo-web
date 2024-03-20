@@ -1,4 +1,4 @@
-type UUID = `${string}-${string}-${string}-${string}-${string}`
+type UUID = `${string}-${string}-${string}-${string}-${string}`;
 interface ICrypto {
-  randomUUID: () => UUID
+	randomUUID: () => UUID;
 }

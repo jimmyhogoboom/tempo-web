@@ -1,58 +1,76 @@
 <script lang="ts">
 	import { entries } from '$stores/stores';
 	import { dateFormat } from '$lib/utils/dateUtils';
-	import Entries from '$lib/Entries';
+	import Entries, { type NewTimeEntry, type TimeEntryUpdate } from '$lib/Entries';
 	import Timer from '$components/Timer.svelte';
 	import EntryTime from '$components/EntryTime.svelte';
 	import { unwrapOr } from 'true-myth/result';
 
 	const { addEntry, openEntry, updateEntry } = Entries;
 
-	$: currentEntry = unwrapOr(undefined, openEntry($entries));
+	const existingOpenEntry = unwrapOr(undefined, openEntry($entries));
 
-	const handleStartClick = () =>
+	let currentEntry: TimeEntry | undefined;
+	$: currentEntry = existingOpenEntry;
+
+	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
+		const id = currentEntry?.id;
 		entries.update((es) => {
-			// TODO: get reference to new entry to allow for updating on stop
-			const r = addEntry(es);
+			const r = id ? updateEntry(es, { id, ...newEntry }) : addEntry(es, newEntry ?? undefined);
 
-			if (r.isOk) return r.value.entries;
+			if (r.isOk) {
+				currentEntry = r.value.entry;
+				return r.value.entries;
+			}
 
 			// TODO: better error message handling
 			console.error(r.error);
 
 			return es;
 		});
+	};
+
+	const handleStartClick = () => {
+		const isClosed = currentEntry && !!currentEntry.endTime;
+
+		const arg: TimeEntryUpdate | undefined = isClosed
+			? ({ ...currentEntry, endTime: null } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
+			: currentEntry
+				? { ...currentEntry, startTime: currentEntry?.startTime ?? new Date() } // Task without start is given one
+				: undefined;
+
+		addOrUpdate(arg);
+	};
 
 	const handleStopClick = () => {
-		if (currentEntry) {
-			const id = currentEntry.id;
-			entries.update((es) => {
-				const r = updateEntry(es, { id, endTime: new Date() });
+		addOrUpdate({ ...currentEntry, endTime: new Date() });
+	};
 
-				if (r.isOk) return r.value.entries;
-
-				// TODO: better error message handling
-				console.error(r.error);
-
-				return es;
-			});
-		}
+	const handleTitleChange = (text: string) => {
+		addOrUpdate({ ...currentEntry, title: text });
 	};
 </script>
 
 <div class="full background-dark">
-	<Timer entry={currentEntry} onStart={handleStartClick} onStop={handleStopClick} />
+	<div class="wrapper">
+		<Timer
+			entry={currentEntry}
+			onStart={handleStartClick}
+			onStop={handleStopClick}
+			onTitleChange={handleTitleChange}
+		/>
 
-	<ul>
-		{#each $entries as entry}
-			<li>
-				{entry.title}
-				{dateFormat(entry.startTime)}
-				{dateFormat(entry.endTime)}
-				<EntryTime {entry} />
-			</li>
-		{/each}
-	</ul>
+		<ul>
+			{#each $entries as entry}
+				<li>
+					{entry.title}
+					{dateFormat(entry.startTime)}
+					{dateFormat(entry.endTime)}
+					<EntryTime {entry} />
+				</li>
+			{/each}
+		</ul>
+	</div>
 </div>
 
 <style lang="scss">
@@ -94,5 +112,10 @@
 	.background-dark {
 		background-color: $surface-100;
 		color: $primary-700;
+	}
+
+	.wrapper {
+		max-width: 800px;
+		margin: 0 auto;
 	}
 </style>

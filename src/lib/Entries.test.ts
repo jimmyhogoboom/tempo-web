@@ -1,5 +1,5 @@
-import { beforeAll, beforeEach, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
-import { buildEntries } from '$lib/Entries';
+import { beforeAll, beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { buildEntries, type NewTimeEntry } from '$lib/Entries';
 import { ok, err } from 'true-myth/result';
 import { addHours } from 'date-fns/fp';
 
@@ -34,6 +34,25 @@ describe('Entries', () => {
 				title: ''
 			};
 			expect(addEntry([])).toStrictEqual(
+				ok({
+					entries: [expectedEntry],
+					entry: expectedEntry
+				})
+			);
+		});
+
+		it.each<[NewTimeEntry, TimeEntry]>([
+			[{ title: 'my title' } as NewTimeEntry, { id: mockId, title: 'my title' } as TimeEntry],
+			[
+				{ title: 'my title', startTime: date } as NewTimeEntry,
+				{
+					id: mockId,
+					title: 'my title',
+					startTime: date
+				} as TimeEntry
+			]
+		])('adds specified new entry to list', (input: NewTimeEntry, expectedEntry: TimeEntry) => {
+			expect(addEntry([], input)).toStrictEqual(
 				ok({
 					entries: [expectedEntry],
 					entry: expectedEntry
@@ -89,21 +108,20 @@ describe('Entries', () => {
 				})
 			).toStrictEqual(
 				ok({
-					entries: [expectedEntry, existingEntries[1]]
+					entries: [expectedEntry, existingEntries[1]],
+					entry: expectedEntry
 				})
 			);
 		});
 
 		it('fails when non-existant entry is updated', () => {
-      const nonExistant = crypto.randomUUID();
+			const nonExistant = crypto.randomUUID();
 			expect(
 				updateEntry(existingEntries, {
 					id: nonExistant,
 					title: 'this should fail'
 				})
-			).toStrictEqual(
-				err(`Entry with id ${nonExistant} does not exist`)
-			);
-    });
+			).toStrictEqual(err(`Entry with id ${nonExistant} does not exist`));
+		});
 	});
 });
