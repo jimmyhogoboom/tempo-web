@@ -9,6 +9,12 @@ export type TimeEntryUpdate = {
 };
 export type NewTimeEntry = Omit<TimeEntryUpdate, 'id'>;
 
+export const isUpdate = (
+	newEntry?: NewTimeEntry | TimeEntryUpdate
+): newEntry is TimeEntryUpdate => {
+	return newEntry !== undefined && 'id' in newEntry;
+};
+
 type AddEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 

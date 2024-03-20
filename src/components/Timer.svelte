@@ -7,7 +7,7 @@
 	export let onStop: () => void;
 	export let onTitleChange: (text: string) => void;
 
-	let title: string = entry?.title ?? '';
+	$: title = entry?.title ?? '';
 
 	$: entryIsOpen = entry && Entries.entryOpen(entry);
 

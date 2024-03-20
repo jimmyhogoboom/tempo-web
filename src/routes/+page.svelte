@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { entries } from '$stores/stores';
 	import { dateFormat } from '$lib/utils/dateUtils';
-	import Entries, { type NewTimeEntry, type TimeEntryUpdate } from '$lib/Entries';
+	import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
 	import Timer from '$components/Timer.svelte';
 	import EntryTime from '$components/EntryTime.svelte';
 	import { unwrapOr } from 'true-myth/result';
@@ -14,7 +14,7 @@
 	$: currentEntry = existingOpenEntry;
 
 	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
-		const id = currentEntry?.id;
+		const id = isUpdate(newEntry) ? newEntry.id : undefined;
 		entries.update((es) => {
 			const r = id ? updateEntry(es, { id, ...newEntry }) : addEntry(es, newEntry ?? undefined);
 
@@ -44,6 +44,7 @@
 
 	const handleStopClick = () => {
 		addOrUpdate({ ...currentEntry, endTime: new Date() });
+		currentEntry = undefined;
 	};
 
 	const handleTitleChange = (text: string) => {
@@ -63,10 +64,23 @@
 		<ul>
 			{#each $entries as entry}
 				<li>
-					{entry.title}
-					{dateFormat(entry.startTime)}
-					{dateFormat(entry.endTime)}
-					<EntryTime {entry} />
+					<button on:click={() => (currentEntry = entry)}>
+						{entry.title}
+						{dateFormat(entry.startTime)}
+						{dateFormat(entry.endTime)}
+						<EntryTime {entry} />
+					</button>
+					{#if entry && !!entry.endTime}
+						<button
+							on:click={() =>
+								addOrUpdate({
+									...entry,
+									startTime: undefined,
+									endTime: undefined,
+									id: undefined
+								})}>Copy</button
+						>
+					{/if}
 				</li>
 			{/each}
 		</ul>
