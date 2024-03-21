@@ -99,11 +99,6 @@
 <style lang="scss">
 	@use '../styles/colors';
 
-	.timer {
-		max-width: 800px;
-		margin: 0 auto;
-	}
-
 	.wrapper {
 		background-color: darken(colors.$surface-100, 4);
 		margin-bottom: 1rem;

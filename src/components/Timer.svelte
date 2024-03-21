@@ -46,7 +46,8 @@
 		flex-wrap: nowrap;
 		justify-content: space-between;
 		align-items: baseline;
-		padding: 3rem 2rem;
+		padding: 0;
+		padding-top: 3rem;
 	}
 
 	.display {
@@ -61,13 +62,14 @@
 	input {
 		font-size: 1rem;
 		display: block;
-		border: 0px;
-		border-bottom: solid 0.2rem colors.$surface-600;
+		border: none;
 		margin: 0;
+		margin-top: 1rem;
 		width: 100%;
-		padding: 1rem;
-		background: rgba(0, 0, 0, 0);
+		padding: 1.3rem;
+		background: darken(colors.$surface-100, 6);
 		color: inherit;
+		text-align: center;
 	}
 
 	.time {
