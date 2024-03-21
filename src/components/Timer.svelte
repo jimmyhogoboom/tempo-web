@@ -25,8 +25,10 @@
 		<button
 			on:click={onClick}
 			class="button"
-			aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}>{entryIsOpen ? '■' : '▶'}</button
+			aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}
 		>
+			<span>{entryIsOpen ? '■' : '▶'}</span>
+		</button>
 	</div>
 
 	<input
@@ -77,6 +79,7 @@
 	}
 
 	.button {
+		font-size: 1.2rem;
 		display: flex;
 		flex: 0 0 auto;
 		align-items: center;
@@ -91,5 +94,9 @@
 		width: 3.2rem;
 		cursor: pointer;
 		box-shadow: 0 0 0 3px rgba(colors.$primary-100, 0.5);
+	}
+
+	.button span {
+		margin-top: -2px;
 	}
 </style>
