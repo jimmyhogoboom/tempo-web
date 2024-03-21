@@ -74,31 +74,46 @@
 
 <div class="full background-dark">
 	<div class="wrapper">
-		<Timer
-			entry={currentEntry}
-			onStart={handleStartClick}
-			onStop={handleStopClick}
-			onTitleChange={handleTitleChange}
-		/>
-
-		<ul>
-			{#each $entries as entry}
-				<EntryListItem
-					{entry}
-					onClick={handleEntryClick(entry)}
-					onCopyClick={handleCopyClick(entry)}
-					onDeleteClick={handleDeleteClick(entry)}
-				/>
-			{/each}
-		</ul>
+		<div class="timer">
+			<Timer
+				entry={currentEntry}
+				onStart={handleStartClick}
+				onStop={handleStopClick}
+				onTitleChange={handleTitleChange}
+			/>
+		</div>
 	</div>
+
+	<ul>
+		{#each $entries as entry}
+			<EntryListItem
+				{entry}
+				onClick={handleEntryClick(entry)}
+				onCopyClick={handleCopyClick(entry)}
+				onDeleteClick={handleDeleteClick(entry)}
+			/>
+		{/each}
+	</ul>
 </div>
 
 <style lang="scss">
 	@use '../styles/colors';
 
+	.timer {
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	.wrapper {
+		background-color: darken(colors.$surface-100, 4);
+		margin-bottom: 1rem;
+		box-shadow: 0px -5px 5px 5px black;
+	}
+
 	ul {
-		margin-top: 1rem;
+		margin-top: 2rem;
+		max-width: 800px;
+		margin: 0 auto;
 	}
 
 	.full {
@@ -112,10 +127,5 @@
 	.background-dark {
 		background-color: colors.$background-color;
 		color: colors.$text-dim;
-	}
-
-	.wrapper {
-		max-width: 800px;
-		margin: 0 auto;
 	}
 </style>

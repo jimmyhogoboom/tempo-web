@@ -20,6 +20,5 @@
 		height: 100%;
 		font-weight: 500;
 		font-family: monospace;
-		font-size: 1rem;
 	}
 </style>

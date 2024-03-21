@@ -15,7 +15,7 @@
 	<button on:click={onClick} class="flex main">
 		<div class="title">{entry.title}</div>
 		<div>{dateFormat(entry.startTime)} - {dateFormat(entry.endTime)}</div>
-		<EntryTime {entry} />
+		<div class="time"><EntryTime {entry} /></div>
 	</button>
 
 	<!-- TODO: move these controls into a modal -->
@@ -63,7 +63,7 @@
 		margin: 0px;
 		width: 100%;
 		height: 100%;
-		color: colors.$text-dim;
+		color: inherit;
 		border: none;
 		padding: 1rem 2rem;
 		background: transparent;
@@ -82,5 +82,9 @@
 		font-weight: bold;
 		width: 100%;
 		text-align: start;
+	}
+
+	.time {
+		font-size: 1rem;
 	}
 </style>

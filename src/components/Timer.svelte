@@ -17,21 +17,24 @@
 </script>
 
 <div class="timer">
+	<div class="display">
+		<div class="time">
+			<EntryTime {entry} />
+		</div>
+
+		<button
+			on:click={onClick}
+			class="button"
+			aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}>{entryIsOpen ? '■' : '▶'}</button
+		>
+	</div>
+
 	<input
 		type="text"
 		placeholder="Entry description"
 		bind:value={title}
 		on:input={() => onTitleChange(title)}
-		class="input"
 	/>
-
-	<div class="time">
-		<EntryTime {entry} />
-	</div>
-
-	<button on:click={onClick} class="button" aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}
-		>{entryIsOpen ? '■' : '▶'}</button
-	>
 </div>
 
 <style lang="scss">
@@ -39,26 +42,36 @@
 
 	.timer {
 		display: flex;
+		flex-direction: column;
 		flex-wrap: nowrap;
 		justify-content: space-between;
 		align-items: baseline;
-		padding: 1rem 0;
+		padding: 3rem 2rem;
 	}
 
-	.input {
+	.display {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		justify-content: center;
+		gap: 3rem;
+		padding-bottom: 1.3rem;
+	}
+
+	input {
 		font-size: 1rem;
 		display: block;
 		border: 0px;
 		border-bottom: solid 0.2rem colors.$surface-600;
-		margin: 0px;
+		margin: 0;
 		width: 100%;
 		padding: 1rem;
 		background: rgba(0, 0, 0, 0);
-		color: colors.$text;
+		color: inherit;
 	}
 
 	.time {
-		padding: 1rem 2rem;
+		font-size: 3rem;
 	}
 
 	.button {
@@ -72,8 +85,8 @@
 		border-radius: 50%;
 		border: none;
 		background-color: colors.$primary-100;
-		height: 2.4rem;
-		width: 2.4rem;
+		height: 3.2rem;
+		width: 3.2rem;
 		cursor: pointer;
 		box-shadow: 0 0 0 3px rgba(colors.$primary-100, 0.5);
 	}
