@@ -1,36 +1,18 @@
 <script lang="ts">
 	import { dateFormat } from '$lib/utils/dateUtils';
 	import EntryTime from '$components/EntryTime.svelte';
-	import Entries from '$lib/Entries';
-
-	const { entryOpen } = Entries;
 
 	export let entry: TimeEntry;
 	export let onClick: () => void;
-	export let onCopyClick: () => void;
-	export let onDeleteClick: () => void;
+	export let selected: boolean;
+	$: selected = false;
 </script>
 
-<li class="flex">
+<li class="flex {selected && 'selected'}">
 	<button on:click={onClick} class="flex main">
 		<div class="title">{entry.title}</div>
-		<div class="flex">
-			<div class="nowrap">{dateFormat(entry.startTime)}</div>
-			<span style="padding: 0 0.3rem;">→</span>
-			<div class="nowrap">{dateFormat(entry.endTime)}</div>
-		</div>
 		<div class="time"><EntryTime {entry} /></div>
 	</button>
-
-	<!-- TODO: move these controls into a modal -->
-	<div class="flex controls">
-		{#if entry && !!entry.endTime}
-			<button on:click={onCopyClick}>Copy</button>
-		{/if}
-		{#if entry && !entryOpen(entry)}
-			<button on:click={onDeleteClick}>Delete</button>
-		{/if}
-	</div>
 </li>
 
 <style lang="scss">
@@ -78,11 +60,13 @@
 		cursor: pointer;
 	}
 
-	li:hover {
+	li:hover,
+	li.selected {
 		background-color: colors.$surface-200;
 	}
 
-	li:hover .main {
+	li:hover .main,
+	li.selected .main {
 		color: colors.$text;
 	}
 
@@ -94,14 +78,5 @@
 
 	.time {
 		font-size: 1rem;
-	}
-
-	/* TODO: remove when the controls are removed */
-	.controls {
-		display: none;
-	}
-
-	li:hover .controls {
-		display: flex;
 	}
 </style>

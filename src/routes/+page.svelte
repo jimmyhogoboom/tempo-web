@@ -4,6 +4,7 @@
 	import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
 	import Timer from '$components/Timer.svelte';
 	import EntryListItem from '$components/EntryListItem.svelte';
+	import EntryEdit from '$components/EntryEdit.svelte';
 
 	const { addEntry, openEntry, updateEntry, deleteEntry } = Entries;
 
@@ -11,6 +12,10 @@
 
 	let currentEntry: TimeEntry | undefined;
 	$: currentEntry = existingOpenEntry;
+
+	$: open = false;
+	let selectedEntry: TimeEntry | undefined;
+	$: selectedEntry = undefined;
 
 	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
 		const id = isUpdate(newEntry) ? newEntry.id : undefined;
@@ -50,8 +55,15 @@
 		addOrUpdate({ ...currentEntry, title: text });
 	};
 
-	// TODO: open a modal instead
-	const handleEntryClick = (entry: TimeEntry) => () => (currentEntry = entry);
+	const handleEntryClick = (entry: TimeEntry) => () => {
+		if (open && entry.id === selectedEntry?.id) {
+			open = false;
+			selectedEntry = undefined;
+		} else {
+			open = true;
+			selectedEntry = entry;
+		}
+	};
 
 	const handleCopyClick = (entry: TimeEntry) => () =>
 		addOrUpdate({
@@ -68,12 +80,13 @@
 			entries.update((es) => {
 				return deleteEntry(es, entry.id);
 			});
+			selectedEntry = undefined;
 		}
 	};
 </script>
 
 <div class="full background-dark">
-	<div class="wrapper">
+	<div class="head-wrapper">
 		<div class="timer">
 			<Timer
 				entry={currentEntry}
@@ -84,31 +97,65 @@
 		</div>
 	</div>
 
-	<ul>
-		{#each $entries as entry}
-			<EntryListItem
-				{entry}
-				onClick={handleEntryClick(entry)}
-				onCopyClick={handleCopyClick(entry)}
-				onDeleteClick={handleDeleteClick(entry)}
-			/>
-		{/each}
-	</ul>
+	<div class="wrapper {open && 'open'}">
+		<div class="left">
+			<ul>
+				{#each $entries as entry}
+					<EntryListItem
+						{entry}
+						onClick={handleEntryClick(entry)}
+						selected={selectedEntry?.id === entry.id}
+					/>
+				{/each}
+			</ul>
+		</div>
+		<div class="right">
+			<div>
+				{#if selectedEntry}
+					<EntryEdit
+						entry={selectedEntry}
+						onCopyClick={handleCopyClick(selectedEntry)}
+						onDeleteClick={handleDeleteClick(selectedEntry)}
+					/>
+				{/if}
+			</div>
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
 	@use '../styles/colors';
 
-	.wrapper {
+	.head-wrapper {
+		position: relative;
 		background-color: darken(colors.$surface-100, 4);
-		margin-bottom: 1rem;
 		box-shadow: 0px -5px 5px 5px black;
+		z-index: 10;
+	}
+
+	.wrapper {
+		position: relative;
+		display: flex;
+		margin: 0 auto;
+		max-width: 800px;
+		overflow-x: hidden;
+		z-index: 1;
+
+		.right {
+			width: 0;
+			background-color: darken(colors.$background-color, 3);
+			transition: width 0.6s;
+		}
+
+		&.open .right {
+			width: 400px;
+		}
 	}
 
 	ul {
-		margin-top: 2rem;
 		max-width: 800px;
 		margin: 0 auto;
+		margin-top: 1rem;
 	}
 
 	.full {
