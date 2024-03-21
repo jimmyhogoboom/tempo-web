@@ -15,9 +15,9 @@
 	<button on:click={onClick} class="flex main">
 		<div class="title">{entry.title}</div>
 		<div class="flex">
-			<div>{dateFormat(entry.startTime)}</div>
+			<div class="nowrap">{dateFormat(entry.startTime)}</div>
 			<span style="padding: 0 0.3rem;">→</span>
-			<div>{dateFormat(entry.endTime)}</div>
+			<div class="nowrap">{dateFormat(entry.endTime)}</div>
 		</div>
 		<div class="time"><EntryTime {entry} /></div>
 	</button>
@@ -42,6 +42,10 @@
 		flex-wrap: nowrap;
 		justify-content: space-between;
 		align-items: center;
+	}
+
+	.nowrap {
+		white-space: nowrap;
 	}
 
 	li {
