@@ -81,6 +81,7 @@
 				return deleteEntry(es, entry.id);
 			});
 			selectedEntry = undefined;
+			open = false;
 		}
 	};
 </script>
