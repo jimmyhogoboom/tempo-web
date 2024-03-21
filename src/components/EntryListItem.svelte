@@ -14,7 +14,11 @@
 <li class="flex">
 	<button on:click={onClick} class="flex main">
 		<div class="title">{entry.title}</div>
-		<div>{dateFormat(entry.startTime)} - {dateFormat(entry.endTime)}</div>
+		<div class="flex">
+			<div>{dateFormat(entry.startTime)}</div>
+			<span style="padding: 0 0.3rem;">→</span>
+			<div>{dateFormat(entry.endTime)}</div>
+		</div>
 		<div class="time"><EntryTime {entry} /></div>
 	</button>
 
@@ -44,7 +48,6 @@
 		overflow: hidden;
 		list-style: none;
 		padding: 0;
-		gap: 1rem;
 		justify-content: space-evenly;
 		border-top: 1px solid colors.$surface-500;
 	}
@@ -60,6 +63,7 @@
 	}
 
 	.main {
+		gap: 2rem;
 		margin: 0px;
 		width: 100%;
 		height: 100%;
@@ -80,11 +84,20 @@
 
 	.title {
 		font-weight: bold;
-		width: 100%;
 		text-align: start;
+		flex-grow: 2;
 	}
 
 	.time {
 		font-size: 1rem;
+	}
+
+	/* TODO: remove when the controls are removed */
+	.controls {
+		display: none;
+	}
+
+	li:hover .controls {
+		display: flex;
 	}
 </style>
