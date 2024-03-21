@@ -1,5 +1,4 @@
-import { ok, err } from 'true-myth/result';
-import Maybe, { just, nothing } from 'true-myth/maybe';
+import Maybe from 'true-myth/maybe';
 
 const _crypto = crypto;
 

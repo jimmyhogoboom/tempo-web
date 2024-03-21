@@ -1,12 +1,11 @@
 <script lang="ts">
+	import { unwrapOr } from 'true-myth/result';
 	import { entries } from '$stores/stores';
-	import { dateFormat } from '$lib/utils/dateUtils';
 	import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
 	import Timer from '$components/Timer.svelte';
-	import EntryTime from '$components/EntryTime.svelte';
-	import { unwrapOr } from 'true-myth/result';
+	import EntryListItem from '$components/EntryListItem.svelte';
 
-	const { addEntry, openEntry, updateEntry, deleteEntry, entryOpen } = Entries;
+	const { addEntry, openEntry, updateEntry, deleteEntry } = Entries;
 
 	const existingOpenEntry = unwrapOr(undefined, openEntry($entries));
 
@@ -50,6 +49,27 @@
 	const handleTitleChange = (text: string) => {
 		addOrUpdate({ ...currentEntry, title: text });
 	};
+
+	// TODO: open a modal instead
+	const handleEntryClick = (entry: TimeEntry) => () => (currentEntry = entry);
+
+	const handleCopyClick = (entry: TimeEntry) => () =>
+		addOrUpdate({
+			...entry,
+			startTime: undefined,
+			endTime: undefined,
+			id: undefined
+		});
+	const handleDeleteClick = (entry: TimeEntry) => () => {
+		if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+			if (currentEntry?.id === entry.id) {
+				currentEntry = undefined;
+			}
+			entries.update((es) => {
+				return deleteEntry(es, entry.id);
+			});
+		}
+	};
 </script>
 
 <div class="full background-dark">
@@ -63,71 +83,23 @@
 
 		<ul>
 			{#each $entries as entry}
-				<li>
-					<button on:click={() => (currentEntry = entry)}>
-						{entry.title}
-						{dateFormat(entry.startTime)}
-						{dateFormat(entry.endTime)}
-						<EntryTime {entry} />
-					</button>
-					{#if entry && !!entry.endTime}
-						<button
-							on:click={() =>
-								addOrUpdate({
-									...entry,
-									startTime: undefined,
-									endTime: undefined,
-									id: undefined
-								})}>Copy</button
-						>
-					{/if}
-					{#if entry && !entryOpen(entry)}
-						<button
-							on:click={() => {
-								if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
-									if (currentEntry?.id === entry.id) {
-										currentEntry = undefined;
-									}
-									entries.update((es) => {
-										return deleteEntry(es, entry.id);
-									});
-								}
-							}}>Delete</button
-						>
-					{/if}
-				</li>
+				<EntryListItem
+					{entry}
+					onClick={handleEntryClick(entry)}
+					onCopyClick={handleCopyClick(entry)}
+					onDeleteClick={handleDeleteClick(entry)}
+				/>
 			{/each}
 		</ul>
 	</div>
 </div>
 
 <style lang="scss">
-	/** SCSS DARK THEME PRIMARY COLORS */
+	@use '../styles/colors';
 
-	$primary-100: #f2591d;
-	$primary-200: #f86e38;
-	$primary-300: #fc8250;
-	$primary-400: #ff9468;
-	$primary-500: #ffa680;
-	$primary-600: #ffb899;
-	$primary-700: #fff2ed;
-
-	/** SCSS DARK THEME SURFACE COLORS */
-
-	$surface-100: #222831;
-	$surface-200: #373c45;
-	$surface-300: #4d525a;
-	$surface-400: #64686f;
-	$surface-500: #7c8086;
-	$surface-600: #95989d;
-
-	/** SCSS DARK THEME MIXED SURFACE COLORS */
-
-	$surface-mixed-100: #382e31;
-	$surface-mixed-200: #4b4245;
-	$surface-mixed-300: #605759;
-	$surface-mixed-400: #756d6f;
-	$surface-mixed-500: #8a8486;
+	ul {
+		margin-top: 1rem;
+	}
 
 	.full {
 		position: absolute;
@@ -138,8 +110,8 @@
 	}
 
 	.background-dark {
-		background-color: $surface-100;
-		color: $primary-700;
+		background-color: colors.$background-color;
+		color: colors.$text-dim;
 	}
 
 	.wrapper {

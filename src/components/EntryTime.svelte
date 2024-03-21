@@ -12,4 +12,14 @@
 	$: formatted = formattedInterval(stopTime, entry?.startTime);
 </script>
 
-<div>{formatted}</div>
+<div class="entry-time">{formatted}</div>
+
+<style lang="scss">
+	.entry-time {
+		display: block;
+		height: 100%;
+		font-weight: 500;
+		font-family: monospace;
+		font-size: 1rem;
+	}
+</style>
