@@ -162,7 +162,6 @@
 		flex-direction: column;
 		margin: 0 auto;
 		max-width: 800px;
-		overflow-x: hidden;
 		z-index: 1;
 
 		.list-container {
@@ -189,6 +188,7 @@
 		position: relative;
 		margin: 0 auto;
 		height: 100%;
+		overflow: auto;
 	}
 
 	.background-dark {
