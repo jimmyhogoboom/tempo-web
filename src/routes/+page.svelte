@@ -117,6 +117,9 @@
 	<div class="wrapper {open && 'open'}">
 		<div class="list-container">
 			<ul>
+				{#if $entries.length < 1}
+					<div class="prompt">Hit the start button to start a new entry</div>
+				{/if}
 				{#each $entries as entry}
 					{@const isSelected = selectedEntry?.id === entry.id}
 					<EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
@@ -136,6 +139,14 @@
 
 <style lang="scss">
 	@use '../styles/colors';
+
+	.prompt {
+		font-family: sans-serif;
+		font-size: 1.1rem;
+		width: 100%;
+		text-align: center;
+		margin-top: 3rem;
+	}
 
 	.head-wrapper {
 		position: sticky;

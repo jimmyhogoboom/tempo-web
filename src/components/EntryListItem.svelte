@@ -61,8 +61,13 @@
 		border-radius: $border-radius $border-radius 0 0;
 	}
 
-	li:last-child {
+	/* nth-last-child(2) to compensate for the edit panel */
+	li:nth-last-child(2) {
 		border-radius: 0 0 $border-radius $border-radius;
+	}
+
+	li:first-child:nth-last-child(2) {
+		border-radius: $border-radius $border-radius $border-radius $border-radius;
 	}
 
 	.main {
