@@ -10,7 +10,17 @@
 
 <li class="flex {selected && 'selected'}">
 	<button on:click={onClick} class="flex main">
-		<div class="title">{entry.title}</div>
+		<div class="title">
+			{#if entry.title.length}
+				{entry.title}
+			{:else}
+				<div class="flex placeholder">
+					<div class="nowrap">{dateFormat(entry?.startTime)}</div>
+					<span style="padding: 0 0.3rem;">→</span>
+					<div class="nowrap">{dateFormat(entry?.endTime)}</div>
+				</div>
+			{/if}
+		</div>
 		<div class="time"><EntryTime {entry} /></div>
 	</button>
 </li>
@@ -24,6 +34,12 @@
 		flex-wrap: nowrap;
 		justify-content: space-between;
 		align-items: center;
+
+		&.placeholder {
+			justify-content: start;
+			gap: 0.2rem;
+			color: colors.$surface-400;
+		}
 	}
 
 	.nowrap {
@@ -36,6 +52,7 @@
 		padding: 0;
 		justify-content: space-evenly;
 		border-top: 1px solid colors.$surface-500;
+		background-color: colors.$background-color;
 	}
 
 	$border-radius: 0.3rem;

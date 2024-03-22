@@ -24,7 +24,7 @@
 
 		<button
 			on:click={onClick}
-			class="button"
+			class="button {entryIsOpen ? 'glow' : ''}"
 			aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}
 		>
 			<span>{entryIsOpen ? '■' : '▶'}</span>
@@ -80,6 +80,7 @@
 
 	.button {
 		font-size: 1.2rem;
+		cursor: pointer;
 		display: flex;
 		flex: 0 0 auto;
 		align-items: center;
@@ -88,12 +89,15 @@
 		margin: 0;
 		padding: 0;
 		border-radius: 50%;
-		border: none;
 		background-color: colors.$primary-100;
 		height: 3.2rem;
 		width: 3.2rem;
-		cursor: pointer;
-		box-shadow: 0 0 0 3px rgba(colors.$primary-100, 0.5);
+		border: 1px solid rgba(colors.$primary-100, 1);
+		transition: box-shadow 0.4s;
+
+		&.glow {
+			box-shadow: 0 0 0 3px rgba(colors.$primary-100, 0.5);
+		}
 	}
 
 	.button span {

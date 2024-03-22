@@ -65,15 +65,19 @@
 		}
 	};
 
-	const handleCopyClick = (entry: TimeEntry) => () =>
+	const handleCopyClick = (entry?: TimeEntry) => () => {
+		if (!entry) return;
+
 		addOrUpdate({
 			...entry,
 			startTime: undefined,
 			endTime: undefined,
 			id: undefined
 		});
-	const handleDeleteClick = (entry: TimeEntry) => () => {
-		if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+	};
+
+	const handleDeleteClick = (entry?: TimeEntry) => () => {
+		if (entry && confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
 			if (currentEntry?.id === entry.id) {
 				currentEntry = undefined;
 			}
@@ -99,27 +103,20 @@
 	</div>
 
 	<div class="wrapper {open && 'open'}">
-		<div class="left">
+		<div class="list-container">
 			<ul>
 				{#each $entries as entry}
-					<EntryListItem
-						{entry}
-						onClick={handleEntryClick(entry)}
-						selected={selectedEntry?.id === entry.id}
-					/>
+					{@const isSelected = selectedEntry?.id === entry.id}
+					<EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
+					<div class="popout {isSelected && 'open'}">
+						<EntryEdit
+							{entry}
+							onCopyClick={handleCopyClick(entry)}
+							onDeleteClick={handleDeleteClick(entry)}
+						/>
+					</div>
 				{/each}
 			</ul>
-		</div>
-		<div class="right">
-			<div>
-				{#if selectedEntry}
-					<EntryEdit
-						entry={selectedEntry}
-						onCopyClick={handleCopyClick(selectedEntry)}
-						onDeleteClick={handleDeleteClick(selectedEntry)}
-					/>
-				{/if}
-			</div>
 		</div>
 	</div>
 </div>
@@ -128,7 +125,9 @@
 	@use '../styles/colors';
 
 	.head-wrapper {
-		position: relative;
+		position: sticky;
+		top: 0;
+		width: 100%;
 		background-color: darken(colors.$surface-100, 4);
 		box-shadow: 0px -5px 5px 5px black;
 		z-index: 10;
@@ -137,38 +136,40 @@
 	.wrapper {
 		position: relative;
 		display: flex;
+		flex-direction: column;
 		margin: 0 auto;
 		max-width: 800px;
 		overflow-x: hidden;
 		z-index: 1;
 
-		.right {
-			width: 0;
-			background-color: darken(colors.$background-color, 3);
-			transition: width 0.6s;
-		}
+		.list-container {
+			width: 100%;
 
-		&.open .right {
-			width: 400px;
+			.popout {
+				transition: height 0.6s;
+				overflow: hidden;
+				height: 0;
+
+				&.open {
+					height: 100px;
+				}
+			}
 		}
 	}
 
 	ul {
 		max-width: 800px;
-		margin: 0 auto;
-		margin-top: 1rem;
+		margin: 1rem auto;
 	}
 
 	.full {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		right: 0;
-		left: 0;
+		position: relative;
+		margin: 0 auto;
+		height: 100%;
 	}
 
 	.background-dark {
-		background-color: colors.$background-color;
+		background-color: darken(colors.$background-color, 3);
 		color: colors.$text-dim;
 	}
 </style>
