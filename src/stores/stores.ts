@@ -9,7 +9,7 @@ const INIT_DATE = new Date();
 export const time = readable<Date>(INIT_DATE, (set) => {
 	const interval = setInterval(() => {
 		set(new Date());
-	}, 1000);
+	}, 1);
 
 	return () => {
 		clearInterval(interval);
