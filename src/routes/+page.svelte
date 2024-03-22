@@ -8,22 +8,23 @@
 
 	const { addEntry, openEntry, updateEntry, deleteEntry } = Entries;
 
-	const existingOpenEntry = unwrapOr(undefined, openEntry($entries));
-
 	let currentEntry: TimeEntry | undefined;
-	$: currentEntry = existingOpenEntry;
+	$: currentEntry = unwrapOr(undefined, openEntry($entries));
 
 	$: open = false;
 	let selectedEntry: TimeEntry | undefined;
 	$: selectedEntry = undefined;
 
+	$: savedTitle = '';
+
+	// TODO: addOrUpdate is probably doing too much here, and should be somewhere else.
 	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
 		const id = isUpdate(newEntry) ? newEntry.id : undefined;
 		entries.update((es) => {
 			const r = id ? updateEntry(es, { id, ...newEntry }) : addEntry(es, newEntry ?? undefined);
 
 			if (r.isOk) {
-				currentEntry = r.value.entry;
+				if (!isUpdate(newEntry)) currentEntry = r.value.entry;
 				return r.value.entries;
 			}
 
@@ -37,11 +38,17 @@
 	const handleStartClick = () => {
 		const isClosed = currentEntry && !!currentEntry.endTime;
 
-		const arg: TimeEntryUpdate | undefined = isClosed
+		const arg: NewTimeEntry | TimeEntryUpdate | undefined = isClosed
 			? ({ ...currentEntry, endTime: null } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
-			: currentEntry
-				? { ...currentEntry, startTime: currentEntry?.startTime ?? new Date() } // Task without start is given one
-				: undefined;
+			: {
+					...currentEntry,
+					title: currentEntry?.title || savedTitle,
+					// Task without start is given one
+					startTime: currentEntry?.startTime ?? new Date()
+				};
+
+		// Must be cleared to avoid polluting next entry
+		savedTitle = '';
 
 		addOrUpdate(arg);
 	};
@@ -51,8 +58,13 @@
 		currentEntry = undefined;
 	};
 
-	const handleTitleChange = (text: string) => {
-		addOrUpdate({ ...currentEntry, title: text });
+	const handleTitleChange = (entry?: TimeEntry) => (text: string) => {
+		if (!entry) {
+			savedTitle = text;
+		} else {
+			addOrUpdate({ ...entry, title: text });
+		}
+		console.log(savedTitle);
 	};
 
 	const handleEntryClick = (entry: TimeEntry) => () => {
@@ -97,7 +109,7 @@
 				entry={currentEntry}
 				onStart={handleStartClick}
 				onStop={handleStopClick}
-				onTitleChange={handleTitleChange}
+				onTitleChange={handleTitleChange(currentEntry)}
 			/>
 		</div>
 	</div>
@@ -113,6 +125,7 @@
 							{entry}
 							onCopyClick={handleCopyClick(entry)}
 							onDeleteClick={handleDeleteClick(entry)}
+							onChange={handleTitleChange(entry)}
 						/>
 					</div>
 				{/each}
@@ -128,7 +141,6 @@
 		position: sticky;
 		top: 0;
 		width: 100%;
-		background-color: darken(colors.$surface-100, 4);
 		box-shadow: 0px -5px 5px 5px black;
 		z-index: 10;
 	}
@@ -151,7 +163,7 @@
 				height: 0;
 
 				&.open {
-					height: 100px;
+					height: 9rem;
 				}
 			}
 		}

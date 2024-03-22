@@ -50,6 +50,7 @@
 		align-items: baseline;
 		padding: 0;
 		padding-top: 3rem;
+		background-color: darken(colors.$surface-100, 4);
 	}
 
 	.display {

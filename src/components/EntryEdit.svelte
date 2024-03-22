@@ -7,25 +7,39 @@
 
 	export let onCopyClick: () => void;
 	export let onDeleteClick: () => void;
+	// TODO: Wait to call onChange until a save button is clicked, to allow the user to back out of changes
+	export let onChange: (title: string, entry?: TimeEntry) => void;
 	export let entry: TimeEntry | undefined;
 	$: entry;
+	$: title = entry?.title;
 </script>
 
-<div class="edit">
-	<div class="flex">
-		<div class="nowrap">{dateFormat(entry?.startTime)}</div>
-		<span style="padding: 0 0.3rem;">→</span>
-		<div class="nowrap">{dateFormat(entry?.endTime)}</div>
-	</div>
-	<div class="time"><EntryTime {entry} /></div>
+<div class="edit flex-col">
+	<div class="flex top">
+		<!-- TODO: These should all be inputs -->
+		<div class="flex">
+			<div class="nowrap">{dateFormat(entry?.startTime)}</div>
+			<span style="padding: 0 0.3rem;">→</span>
+			<div class="nowrap">{dateFormat(entry?.endTime)}</div>
+		</div>
+		<div class="time"><EntryTime {entry} /></div>
 
-	<div class="flex controls">
-		{#if entry && !!entry.endTime}
-			<button on:click={onCopyClick}>Copy</button>
-		{/if}
-		{#if entry && !entryOpen(entry)}
-			<button on:click={onDeleteClick}>Delete</button>
-		{/if}
+		<div class="flex controls">
+			{#if entry && !!entry.endTime}
+				<button on:click={onCopyClick}>Copy</button>
+			{/if}
+			{#if entry && !entryOpen(entry)}
+				<button on:click={onDeleteClick}>Delete</button>
+			{/if}
+		</div>
+	</div>
+	<div class="flex">
+		<input
+			type="text"
+			placeholder="Entry description"
+			bind:value={title}
+			on:input={(e) => onChange(e.currentTarget.value, entry)}
+		/>
 	</div>
 </div>
 
@@ -34,6 +48,8 @@
 
 	.edit {
 		font-family: sans-serif;
+		background-color: darken(colors.$surface-100, 4);
+		height: 100%;
 	}
 
 	.flex {
@@ -44,11 +60,34 @@
 		align-items: center;
 	}
 
+	.flex-col {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.top {
+		padding: 1rem 0;
+	}
+
 	.nowrap {
 		white-space: nowrap;
 	}
 
 	.time {
 		font-size: 1rem;
+	}
+
+	input {
+		font-size: 1rem;
+		display: block;
+		border: none;
+		margin: 0;
+		margin-top: 1rem;
+		width: 100%;
+		padding: 1.3rem;
+		background: darken(colors.$surface-100, 6);
+		color: inherit;
+		text-align: center;
 	}
 </style>
