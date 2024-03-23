@@ -168,7 +168,7 @@
 			width: 100%;
 
 			.popout {
-				transition: height 0.6s;
+				transition: height 0.5s;
 				overflow: hidden;
 				height: 0;
 

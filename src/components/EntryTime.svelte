@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { interval, intervalToDuration } from 'date-fns/fp';
 	import { time } from '$stores/stores';
-	import { timerFormat } from '$lib/utils/dateUtils';
+	import { formatEntryDuration } from '$lib/utils/entryUtils';
 
 	export let entry: TimeEntry | undefined;
 
-	const formattedInterval = (end?: Date, start?: Date) =>
-		timerFormat(end && start && intervalToDuration(interval(end, start)));
-
-	$: stopTime = entry?.endTime ?? $time;
-	$: formatted = formattedInterval(stopTime, entry?.startTime);
+	$: formatted = formatEntryDuration($time, entry);
 </script>
 
 <div class="entry-time">{formatted}</div>

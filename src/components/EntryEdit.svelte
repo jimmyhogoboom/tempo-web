@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { dateFormat } from '$lib/utils/dateUtils';
-	import EntryTime from '$components/EntryTime.svelte';
+	import { formatEntryDuration } from '$lib/utils/entryUtils';
+	import { time } from '$stores/stores';
 	import Entries from '$lib/Entries';
 
 	const { entryOpen } = Entries;
@@ -15,14 +16,22 @@
 </script>
 
 <div class="edit flex-col">
-	<div class="flex top">
-		<!-- TODO: These should all be inputs -->
-		<div class="flex">
-			<div class="nowrap">{dateFormat(entry?.startTime)}</div>
+	<div class="flex">
+		<input
+			class="title"
+			type="text"
+			placeholder="Entry description"
+			bind:value={title}
+			on:input={(e) => onChange(e.currentTarget.value, entry)}
+		/>
+	</div>
+	<div class="flex">
+		<div class="flex nowrap">
+			<input type="text" value={dateFormat(entry?.startTime)} />
 			<span style="padding: 0 0.3rem;">→</span>
-			<div class="nowrap">{dateFormat(entry?.endTime)}</div>
+			<input type="text" value={dateFormat(entry?.endTime)} />
 		</div>
-		<div class="time"><EntryTime {entry} /></div>
+		<input type="text" value={formatEntryDuration($time, entry)} />
 
 		<div class="flex controls">
 			{#if entry && !!entry.endTime}
@@ -32,14 +41,6 @@
 				<button on:click={onDeleteClick}>Delete</button>
 			{/if}
 		</div>
-	</div>
-	<div class="flex">
-		<input
-			type="text"
-			placeholder="Entry description"
-			bind:value={title}
-			on:input={(e) => onChange(e.currentTarget.value, entry)}
-		/>
 	</div>
 </div>
 
@@ -66,10 +67,6 @@
 		justify-content: space-between;
 	}
 
-	.top {
-		padding: 1rem 0;
-	}
-
 	.nowrap {
 		white-space: nowrap;
 	}
@@ -80,14 +77,17 @@
 
 	input {
 		font-size: 1rem;
-		display: block;
 		border: none;
 		margin: 0;
-		margin-top: 1rem;
-		width: 100%;
-		padding: 1.3rem;
+		padding: 1rem;
 		background: darken(colors.$surface-100, 6);
 		color: inherit;
 		text-align: center;
+	}
+
+	.title {
+		display: block;
+		width: 100%;
+		padding: 1.3rem;
 	}
 </style>
