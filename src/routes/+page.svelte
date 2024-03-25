@@ -95,6 +95,8 @@
 			endTime: undefined,
 			id: undefined
 		});
+
+		// TODO: Set the new entry as the currentEntry
 	};
 
 	const handleDeleteClick = (entry?: TimeEntry) => () => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dateFormat } from '$lib/utils/dateUtils';
+	import { dateFormat, parseTime } from '$lib/utils/dateUtils';
 	import { formatEntryDuration } from '$lib/utils/entryUtils';
 	import { time } from '$stores/stores';
 	import Entries, { type NewTimeEntry, type TimeEntryUpdate } from '$lib/Entries';
@@ -11,26 +11,73 @@
 	export let onDeleteClick: () => void;
 	export let onChange: (updatedEntry?: TimeEntryUpdate) => void;
 	export let entry: TimeEntry | undefined;
+	$: entry;
 
-	$: currentEntry = { ...entry } as TimeEntryUpdate;
-	$: formDirty =
-		currentEntry &&
-		entry &&
-		(currentEntry.title !== entry.title ||
-			currentEntry.startTime !== entry.startTime ||
-			currentEntry.endTime != entry.endTime);
+	type EntryForm = {
+		startTime?: string;
+		endTime?: string;
+		totalTime?: string;
+		title?: string;
+	};
+
+	const entryToFormValues = (entry?: TimeEntry) => ({
+		startTime: entry && dateFormat(entry?.startTime || undefined),
+		endTime: entry && dateFormat(entry?.endTime || undefined),
+		title: entry ? entry.title : '',
+		totalTime: entry && formatEntryDuration($time, entry)
+	});
+
+	const formValuesToEntry = (form: EntryForm): TimeEntryUpdate | undefined =>
+		entry && form
+			? {
+					id: entry.id,
+					startTime: timeToDate(entry.startTime, form.startTime),
+					endTime: timeToDate(entry.endTime, form.endTime),
+					title: form.title
+				}
+			: undefined;
+
+	const formEqualsEntry = (form: EntryForm, entry?: TimeEntry) => {
+		const entryAsForm = entryToFormValues(entry);
+
+		return (
+			entryAsForm.startTime === form.startTime &&
+			entryAsForm.endTime === form.endTime &&
+			entryAsForm.title === form.title
+		);
+	};
+
+	$: currentEntry = entryToFormValues(entry);
+	$: formDirty = currentEntry && entry && !formEqualsEntry(currentEntry, entry);
+	// TODO: add formValid boolean to disable save button when input is invalid
+
+	$: entryCanDelete = currentEntry && !entryOpen(formValuesToEntry(currentEntry));
 
 	const onLocalCancelClick = () => {
-		currentEntry = { ...entry } as TimeEntryUpdate;
+		currentEntry = entryToFormValues(entry);
 		onCancelClick();
 	};
 
 	const onSaveClick = () => {
-		onChange(currentEntry);
+		onChange(formValuesToEntry(currentEntry));
 	};
 
-	const onLocalChange = (newEntry: NewTimeEntry) => {
+	const onLocalChange = (newEntry: EntryForm) => {
+		// TODO: if it's the totalTime that changed:
+		//       if the entry is open, update the startTime to make it true
+		//       if the entry is closed, update the endTime to make it true
+
+		// TODO: update the total time when start or end date is changed
 		currentEntry = { ...currentEntry, ...newEntry };
+	};
+
+	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date => {
+		if (referenceDate === null) referenceDate = new Date();
+		if (!text) return referenceDate;
+
+		const r = parseTime(referenceDate, text);
+
+		return r.isOk ? r.value : referenceDate;
 	};
 </script>
 
@@ -48,24 +95,34 @@
 		<div class="flex nowrap">
 			<input
 				type="text"
-				value={dateFormat(currentEntry?.startTime || undefined)}
 				class="time-field"
+				value={currentEntry?.startTime}
+				on:input={(e) =>
+					onLocalChange({
+						startTime: e.currentTarget.value
+					})}
 			/>
 			<span style="padding: 0 0.3rem;">→</span>
+			<!-- TODO: disable this input if the entry is open -->
 			<input
 				type="text"
-				value={dateFormat(currentEntry?.endTime || undefined)}
 				class="time-field"
+				value={currentEntry?.endTime}
+				on:input={(e) =>
+					onLocalChange({
+						endTime: e.currentTarget.value
+					})}
 			/>
 		</div>
-		<input type="text" value={formatEntryDuration($time, currentEntry)} class="time-field total" />
+		<!-- TODO: disable this input if the entry is open -->
+		<input type="text" value={currentEntry.totalTime} class="time-field total" />
 	</div>
 	<div class="flex controls">
 		<div>
-			{#if currentEntry && !!currentEntry.endTime}
-				<button on:click={onCopyClick}>Copy</button>
-			{/if}
-			{#if currentEntry && !entryOpen(currentEntry)}
+			<!-- {#if currentEntry && !!currentEntry.endTime} -->
+			<!-- 	<button on:click={onCopyClick}>Copy</button> -->
+			<!-- {/if} -->
+			{#if entryCanDelete}
 				<button on:click={onDeleteClick}>Delete</button>
 			{/if}
 		</div>
