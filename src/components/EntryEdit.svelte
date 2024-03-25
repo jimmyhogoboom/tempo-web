@@ -124,12 +124,12 @@
 			<!-- 	<button on:click={onCopyClick}>Copy</button> -->
 			<!-- {/if} -->
 			{#if entryCanDelete}
-				<button on:click={onDeleteClick}>Delete</button>
+				<button on:click={onDeleteClick} class="error">Delete</button>
 			{/if}
 		</div>
-		<div>
-			<button on:click={onLocalCancelClick}>Canel</button>
-			<button on:click={onSaveClick} disabled={!formDirty}>Save</button>
+		<div class="gap">
+			<button on:click={onLocalCancelClick} class="secondary">Cancel</button>
+			<button on:click={onSaveClick} class="primary" disabled={!formDirty}>Save</button>
 		</div>
 	</div>
 </div>
@@ -139,20 +139,54 @@
 
 	button {
 		padding: 0.5rem;
-		background-color: colors.$primary-300;
 		border-radius: 0.5rem;
 		cursor: pointer;
 		border: 0.2rem solid transparent;
 
-		&:hover {
-			background-color: colors.$primary-200;
+		&.primary {
+			background-color: lighten(colors.$text-dim, 25);
+
+			&:hover {
+				background-color: lighten(colors.$text-dim, 15);
+			}
+
+			&:disabled {
+				background-color: darken(colors.$text-dim, 22);
+				color: darken(colors.$text-dim, 35);
+			}
+		}
+
+		&.secondary {
+			background-color: transparent;
+			color: colors.$text-dim;
+			font-weight: bold;
+
+			&:hover {
+				background-color: transparentize(colors.$text-dim, 0.9);
+			}
+		}
+
+		&.warning {
+		}
+
+		&.error {
+			color: colors.$primary-100;
+			background-color: transparent;
+			font-weight: bold;
+
+			&:hover {
+				background-color: colors.$primary-300;
+				color: darken(colors.$primary-100, 35);
+			}
+
+			&:disabled {
+				background-color: colors.$primary-500;
+				color: colors.$surface-mixed-300;
+			}
 		}
 
 		&:disabled {
-			background-color: colors.$primary-500;
-			border: 0.2rem solid transparent;
 			cursor: default;
-			color: colors.$surface-mixed-300;
 		}
 	}
 
@@ -176,6 +210,11 @@
 
 		&.justify-right {
 			justify-content: end;
+		}
+
+		& .gap {
+			display: flex;
+			gap: 1rem;
 		}
 	}
 
