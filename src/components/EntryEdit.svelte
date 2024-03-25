@@ -72,6 +72,7 @@
 	};
 
 	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date => {
+		// TODO: use the entry's createdDate as the referenceDate to avoid issues when the start/end dates are null
 		if (referenceDate === null) referenceDate = new Date();
 		if (!text) return referenceDate;
 
