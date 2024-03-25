@@ -64,7 +64,16 @@
 		} else {
 			addOrUpdate({ ...entry, title: text });
 		}
-		console.log(savedTitle);
+	};
+
+	const handleChange = (entry?: TimeEntry) => (updatedEntry?: TimeEntryUpdate) => {
+		if (!entry) {
+			savedTitle = updatedEntry?.title || '';
+		} else {
+			addOrUpdate({ ...entry, ...updatedEntry });
+		}
+
+		if (selectedEntry) selectedEntry = undefined;
 	};
 
 	const handleEntryClick = (entry: TimeEntry) => () => {
@@ -126,9 +135,10 @@
 					<div class="popout {isSelected && 'open'}">
 						<EntryEdit
 							{entry}
+							onCancelClick={handleEntryClick(entry)}
 							onCopyClick={handleCopyClick(entry)}
 							onDeleteClick={handleDeleteClick(entry)}
-							onChange={handleTitleChange(entry)}
+							onChange={handleChange(entry)}
 						/>
 					</div>
 				{/each}
@@ -173,7 +183,7 @@
 				height: 0;
 
 				&.open {
-					height: 9rem;
+					height: 11rem;
 				}
 			}
 		}

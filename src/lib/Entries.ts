@@ -25,7 +25,8 @@ export function initEntries(_crypto: ICrypto) {
 	/**
 	 * True if the entry has no endTime, and is therefore currently being tracked
 	 */
-	const entryOpen = (entry: TimeEntry) => entry && entry.startTime && !entry.endTime;
+	const entryOpen = (entry: TimeEntry | NewTimeEntry | TimeEntryUpdate) =>
+		entry && entry.startTime && !entry.endTime;
 
 	/**
 	 * True when at least one entry in the list is open
