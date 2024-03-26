@@ -31,6 +31,7 @@ describe('Entries', () => {
 			const expectedEntry = {
 				id: mockId,
 				startTime: date,
+				createdAt: date,
 				title: ''
 			};
 			expect(addEntry([])).toStrictEqual(
@@ -41,17 +42,23 @@ describe('Entries', () => {
 			);
 		});
 
-		it.each<[NewTimeEntry, TimeEntry]>([
-			[{ title: 'my title' } as NewTimeEntry, { id: mockId, title: 'my title' } as TimeEntry],
-			[
+		it.each<() => [NewTimeEntry, TimeEntry]>([
+			() => [
+				{ title: 'my title' } as NewTimeEntry,
+				{ id: mockId, title: 'my title', createdAt: date } as TimeEntry
+			],
+			() => [
 				{ title: 'my title', startTime: date } as NewTimeEntry,
 				{
 					id: mockId,
 					title: 'my title',
-					startTime: date
+					startTime: date,
+					createdAt: date
 				} as TimeEntry
 			]
-		])('adds specified new entry to list', (input: NewTimeEntry, expectedEntry: TimeEntry) => {
+		])('adds specified new entry to list', (getCase) => {
+			// Cases must be populated through a function to get the value of `date`.
+			const [input, expectedEntry] = getCase();
 			expect(addEntry([], input)).toStrictEqual(
 				ok({
 					entries: [expectedEntry],
@@ -65,8 +72,9 @@ describe('Entries', () => {
 				addEntry([
 					{
 						id: crypto.randomUUID(),
+						title: '',
 						startTime: date,
-						title: ''
+						createdAt: date
 					}
 				])
 			).toStrictEqual(err("There's already a timer running"));
@@ -79,25 +87,30 @@ describe('Entries', () => {
 			existingEntries = [
 				{
 					id: mockId,
+					title: 'old title',
 					startTime: date,
-					title: 'old title'
+					createdAt: date
 				},
 				{
 					id: crypto.randomUUID(),
+					title: 'the other one',
 					startTime: date,
-					title: 'the other one'
+					createdAt: date
 				}
 			];
 		});
 
 		it('updates expected entry', () => {
 			const endDate = addHours(2, date);
+			vi.setSystemTime(endDate);
 			const newTitle = 'new title';
 			const expectedEntry = {
 				id: mockId,
+				title: newTitle,
 				startTime: date,
 				endTime: endDate,
-				title: newTitle
+				createdAt: date,
+				updatedAt: endDate
 			};
 
 			expect(
@@ -132,11 +145,13 @@ describe('Entries', () => {
 				{
 					id: mockId,
 					startTime: date,
+					createdAt: date,
 					title: 'delete me'
 				},
 				{
 					id: crypto.randomUUID(),
 					startTime: date,
+					createdAt: date,
 					title: 'the other one'
 				}
 			];

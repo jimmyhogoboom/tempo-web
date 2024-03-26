@@ -28,7 +28,6 @@
 	});
 
 	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
-		// TODO: use the entry's createdDate as the referenceDate to avoid issues when the start/end dates are null
 		if (referenceDate === null || !text) return undefined;
 
 		const r = parseTime(referenceDate, text);
@@ -40,8 +39,8 @@
 		entry && form
 			? {
 					id: entry.id,
-					startTime: timeToDate(entry.startTime, form.startTime),
-					endTime: timeToDate(entry.endTime, form.endTime),
+					startTime: timeToDate(entry.createdAt, form.startTime),
+					endTime: timeToDate(entry.createdAt, form.endTime),
 					title: form.title
 				}
 			: undefined;

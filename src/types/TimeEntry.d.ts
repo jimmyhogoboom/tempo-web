@@ -1,6 +1,8 @@
 type TimeEntry = {
 	id: UUID;
+	title: string;
 	startTime: Date;
 	endTime?: Date;
-	title: string;
+	createdAt: Date;
+	updatedAt?: Date;
 };

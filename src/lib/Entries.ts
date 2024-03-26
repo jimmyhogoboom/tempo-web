@@ -61,11 +61,12 @@ export function initEntries(_crypto: ICrypto) {
 		const newId = _crypto.randomUUID();
 		// Ensure a new id
 		const _entry: TimeEntry = entry
-			? ({ ...entry, id: newId } as TimeEntry)
+			? ({ ...entry, createdAt: new Date(), id: newId } as TimeEntry)
 			: {
 					id: newId,
+					title: '',
 					startTime: new Date(),
-					title: ''
+					createdAt: new Date()
 				};
 
 		_entry.id = _crypto.randomUUID();
@@ -87,7 +88,7 @@ export function initEntries(_crypto: ICrypto) {
 			return err(`Entry with id ${entryUpdate.id} does not exist`);
 		}
 
-		const newEntry = replaceProps(entry.value, entryUpdate);
+		const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
 		const index = entries.findIndex((e) => e.id === entry.value.id);
 
 		entries[index] = newEntry;
