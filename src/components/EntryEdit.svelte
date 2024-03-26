@@ -2,7 +2,7 @@
 	import { dateFormat, parseTime } from '$lib/utils/dateUtils';
 	import { formatEntryDuration } from '$lib/utils/entryUtils';
 	import { time } from '$stores/stores';
-	import Entries, { type NewTimeEntry, type TimeEntryUpdate } from '$lib/Entries';
+	import Entries, { type TimeEntryUpdate } from '$lib/Entries';
 
 	const { entryOpen } = Entries;
 
@@ -43,42 +43,48 @@
 		return (
 			entryAsForm.startTime === form.startTime &&
 			entryAsForm.endTime === form.endTime &&
+			entryAsForm.totalTime === form.totalTime &&
 			entryAsForm.title === form.title
 		);
 	};
 
-	$: currentEntry = entryToFormValues(entry);
-	$: formDirty = currentEntry && entry && !formEqualsEntry(currentEntry, entry);
-	// TODO: add formValid boolean to disable save button when input is invalid
+	const validateForm = (form: EntryForm) => {
+		const currentEntry = formValuesToEntry(form);
 
-	$: entryCanDelete = currentEntry && !entryOpen(formValuesToEntry(currentEntry));
+		return currentEntry?.startTime !== undefined && currentEntry?.endTime !== undefined;
+	};
+
+	$: formValues = entryToFormValues(entry);
+	$: formDirty = formValues && entry && !formEqualsEntry(formValues, entry);
+	$: formValid = validateForm(formValues);
+	$: entryCanDelete = !entryOpen(entry);
 
 	const onLocalCancelClick = () => {
-		currentEntry = entryToFormValues(entry);
+		formValues = entryToFormValues(entry);
 		onCancelClick();
 	};
 
 	const onSaveClick = () => {
-		onChange(formValuesToEntry(currentEntry));
+		formValid && formDirty && onChange(formValuesToEntry(formValues));
 	};
 
 	const onLocalChange = (newEntry: EntryForm) => {
 		// TODO: if it's the totalTime that changed:
 		//       if the entry is open, update the startTime to make it true
 		//       if the entry is closed, update the endTime to make it true
+		//       This should probably be in the model.
 
 		// TODO: update the total time when start or end date is changed
-		currentEntry = { ...currentEntry, ...newEntry };
+		formValues = { ...formValues, ...newEntry };
 	};
 
-	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date => {
+	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
 		// TODO: use the entry's createdDate as the referenceDate to avoid issues when the start/end dates are null
-		if (referenceDate === null) referenceDate = new Date();
-		if (!text) return referenceDate;
+		if (referenceDate === null || !text) return undefined;
 
 		const r = parseTime(referenceDate, text);
 
-		return r.isOk ? r.value : referenceDate;
+		return r.isOk ? r.value : undefined;
 	};
 </script>
 
@@ -88,7 +94,7 @@
 			class="title"
 			type="text"
 			placeholder="Entry description"
-			value={currentEntry.title}
+			value={formValues.title}
 			on:input={(e) => onLocalChange({ title: e.currentTarget.value })}
 		/>
 	</div>
@@ -97,7 +103,7 @@
 			<input
 				type="text"
 				class="time-field"
-				value={currentEntry?.startTime}
+				value={formValues.startTime}
 				on:input={(e) =>
 					onLocalChange({
 						startTime: e.currentTarget.value
@@ -108,7 +114,7 @@
 			<input
 				type="text"
 				class="time-field"
-				value={currentEntry?.endTime}
+				value={formValues.endTime}
 				on:input={(e) =>
 					onLocalChange({
 						endTime: e.currentTarget.value
@@ -116,7 +122,15 @@
 			/>
 		</div>
 		<!-- TODO: disable this input if the entry is open -->
-		<input type="text" value={currentEntry.totalTime} class="time-field total" />
+		<input
+			type="text"
+			value={formValues.totalTime}
+			class="time-field total"
+			on:input={(e) =>
+				onLocalChange({
+					totalTime: e.currentTarget.value
+				})}
+		/>
 	</div>
 	<div class="flex controls">
 		<div>
@@ -129,7 +143,9 @@
 		</div>
 		<div class="gap">
 			<button on:click={onLocalCancelClick} class="secondary">Cancel</button>
-			<button on:click={onSaveClick} class="primary" disabled={!formDirty}>Save</button>
+			<button on:click={onSaveClick} class="primary" disabled={!(formDirty && formValid)}>
+				Save
+			</button>
 		</div>
 	</div>
 </div>
