@@ -134,10 +134,14 @@
 			type="text"
 			value={formValues.totalTime}
 			class="time-field total"
-			on:input={(e) =>
-				onLocalChange({
-					totalTime: e.currentTarget.value
-				})}
+			disabled
+			on:input={(e) => {
+				// onLocalChange({
+				// 	totalTime: e.currentTarget.value
+				// })
+				return formValues.totalTime;
+			}}
+			title="Entry duration editing coming soon!"
 		/>
 	</div>
 	<div class="flex controls">
