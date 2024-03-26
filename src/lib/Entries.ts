@@ -3,9 +3,9 @@ import { just, nothing } from 'true-myth/maybe';
 
 export type TimeEntryUpdate = {
 	id: UUID;
-	startTime?: Date | null;
-	endTime?: Date | null;
-	title?: string | null;
+	startTime?: Date;
+	endTime?: Date;
+	title?: string;
 };
 export type NewTimeEntry = Omit<TimeEntryUpdate, 'id'>;
 

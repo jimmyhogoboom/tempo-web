@@ -20,7 +20,7 @@
 		title?: string;
 	};
 
-	const entryToFormValues = (entry?: TimeEntry) => ({
+	const entryToFormValues = (entry?: TimeEntry | TimeEntryUpdate) => ({
 		startTime: entry && dateFormat(entry?.startTime || undefined),
 		endTime: entry && dateFormat(entry?.endTime || undefined),
 		title: entry ? entry.title : '',
@@ -51,7 +51,7 @@
 	const validateForm = (form: EntryForm) => {
 		const currentEntry = formValuesToEntry(form);
 
-		return currentEntry?.startTime !== undefined && currentEntry?.endTime !== undefined;
+		return currentEntry?.startTime !== undefined;
 	};
 
 	$: formValues = entryToFormValues(entry);
@@ -65,17 +65,23 @@
 	};
 
 	const onSaveClick = () => {
-		formValid && formDirty && onChange(formValuesToEntry(formValues));
+		if (formValid && formDirty) onChange(formValuesToEntry(formValues));
 	};
 
-	const onLocalChange = (newEntry: EntryForm) => {
+	const onLocalChange = (change: EntryForm) => {
+		const newEntry = formValuesToEntry({ ...formValues, ...change });
+
 		// TODO: if it's the totalTime that changed:
 		//       if the entry is open, update the startTime to make it true
 		//       if the entry is closed, update the endTime to make it true
 		//       This should probably be in the model.
 
-		// TODO: update the total time when start or end date is changed
-		formValues = { ...formValues, ...newEntry };
+		if (change.startTime || change.endTime) {
+			const totalTime = formatEntryDuration($time, newEntry);
+			formValues = { ...formValues, ...change, totalTime };
+		} else {
+			formValues = { ...formValues, ...change };
+		}
 	};
 
 	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {

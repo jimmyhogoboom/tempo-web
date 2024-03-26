@@ -39,7 +39,7 @@
 		const isClosed = currentEntry && !!currentEntry.endTime;
 
 		const arg: NewTimeEntry | TimeEntryUpdate | undefined = isClosed
-			? ({ ...currentEntry, endTime: null } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
+			? ({ ...currentEntry, endTime: undefined } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
 			: {
 					...currentEntry,
 					title: currentEntry?.title || savedTitle,
