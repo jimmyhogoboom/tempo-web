@@ -117,7 +117,6 @@
 					})}
 			/>
 			<span style="padding: 0 0.3rem;">→</span>
-			<!-- TODO: disable this input if the entry is open -->
 			<input
 				type="text"
 				class="time-field"
