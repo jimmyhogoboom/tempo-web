@@ -27,6 +27,15 @@
 		totalTime: entry && formatEntryDuration($time, entry)
 	});
 
+	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
+		// TODO: use the entry's createdDate as the referenceDate to avoid issues when the start/end dates are null
+		if (referenceDate === null || !text) return undefined;
+
+		const r = parseTime(referenceDate, text);
+
+		return r.isOk ? r.value : undefined;
+	};
+
 	const formValuesToEntry = (form: EntryForm): TimeEntryUpdate | undefined =>
 		entry && form
 			? {
@@ -50,8 +59,10 @@
 
 	const validateForm = (form: EntryForm) => {
 		const currentEntry = formValuesToEntry(form);
+		const startValid = currentEntry?.startTime !== undefined;
+		const endValid = form?.endTime === undefined || currentEntry?.endTime !== undefined;
 
-		return currentEntry?.startTime !== undefined;
+		return startValid && endValid;
 	};
 
 	$: formValues = entryToFormValues(entry);
@@ -69,7 +80,7 @@
 	};
 
 	const onLocalChange = (change: EntryForm) => {
-		const newEntry = formValuesToEntry({ ...formValues, ...change });
+		const proposedEntry = formValuesToEntry({ ...formValues, ...change });
 
 		// TODO: if it's the totalTime that changed:
 		//       if the entry is open, update the startTime to make it true
@@ -77,20 +88,11 @@
 		//       This should probably be in the model.
 
 		if (change.startTime || change.endTime) {
-			const totalTime = formatEntryDuration($time, newEntry);
+			const totalTime = formatEntryDuration($time, proposedEntry);
 			formValues = { ...formValues, ...change, totalTime };
 		} else {
 			formValues = { ...formValues, ...change };
 		}
-	};
-
-	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
-		// TODO: use the entry's createdDate as the referenceDate to avoid issues when the start/end dates are null
-		if (referenceDate === null || !text) return undefined;
-
-		const r = parseTime(referenceDate, text);
-
-		return r.isOk ? r.value : undefined;
 	};
 </script>
 

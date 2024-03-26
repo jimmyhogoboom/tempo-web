@@ -6,10 +6,10 @@
 	import EntryListItem from '$components/EntryListItem.svelte';
 	import EntryEdit from '$components/EntryEdit.svelte';
 
-	const { addEntry, openEntry, updateEntry, deleteEntry } = Entries;
+	const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
 	let currentEntry: TimeEntry | undefined;
-	$: currentEntry = unwrapOr(undefined, openEntry($entries));
+	$: currentEntry = unwrapOr(undefined, findOpenEntry($entries));
 
 	$: open = false;
 	let selectedEntry: TimeEntry | undefined;
@@ -17,11 +17,9 @@
 
 	$: savedTitle = '';
 
-	// TODO: addOrUpdate is probably doing too much here, and should be somewhere else.
-	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
-		const id = isUpdate(newEntry) ? newEntry.id : undefined;
+	const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
 		entries.update((es) => {
-			const r = id ? updateEntry(es, { id, ...newEntry }) : addEntry(es, newEntry ?? undefined);
+			const r = addOrUpdate(es, newEntry);
 
 			if (r.isOk) {
 				if (!isUpdate(newEntry)) currentEntry = r.value.entry;
@@ -50,11 +48,11 @@
 		// Must be cleared to avoid polluting next entry
 		savedTitle = '';
 
-		addOrUpdate(arg);
+		saveEntry(arg);
 	};
 
 	const handleStopClick = () => {
-		addOrUpdate({ ...currentEntry, endTime: new Date() });
+		saveEntry({ ...currentEntry, endTime: new Date() });
 		currentEntry = undefined;
 	};
 
@@ -62,7 +60,7 @@
 		if (!entry) {
 			savedTitle = text;
 		} else {
-			addOrUpdate({ ...entry, title: text });
+			saveEntry({ ...entry, title: text });
 		}
 	};
 
@@ -70,7 +68,7 @@
 		if (!entry) {
 			savedTitle = updatedEntry?.title || '';
 		} else {
-			addOrUpdate({ ...entry, ...updatedEntry });
+			saveEntry({ ...entry, ...updatedEntry });
 		}
 
 		if (selectedEntry) selectedEntry = undefined;
@@ -89,7 +87,7 @@
 	const handleCopyClick = (entry?: TimeEntry) => () => {
 		if (!entry) return;
 
-		addOrUpdate({
+		saveEntry({
 			...entry,
 			startTime: undefined,
 			endTime: undefined,

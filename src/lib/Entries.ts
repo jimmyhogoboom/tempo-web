@@ -33,7 +33,7 @@ export function initEntries(_crypto: ICrypto) {
 	 */
 	const hasOpenEntry = (entries: TimeEntry[]) => entries.some(entryOpen);
 
-	const openEntry = (entries: TimeEntry[]): Result<TimeEntry, string> => {
+	const findOpenEntry = (entries: TimeEntry[]): Result<TimeEntry, string> => {
 		const entry = entries.find(entryOpen);
 		if (entry) {
 			return ok(entry);
@@ -104,13 +104,22 @@ export function initEntries(_crypto: ICrypto) {
 		return entries.filter((e) => e.id !== id);
 	};
 
+	const addOrUpdate = (entries: TimeEntry[], newEntry: NewTimeEntry | TimeEntryUpdate) => {
+		const id = isUpdate(newEntry) ? newEntry.id : undefined;
+
+		return id
+			? updateEntry(entries, { id, ...newEntry })
+			: addEntry(entries, newEntry ?? undefined);
+	};
+
 	return {
 		entryOpen,
 		hasOpenEntry,
-		openEntry,
+		findOpenEntry,
 		hasEntry,
 		addEntry,
 		updateEntry,
+		addOrUpdate,
 		deleteEntry
 	};
 }
