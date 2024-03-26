@@ -3,9 +3,9 @@ import { just, nothing } from 'true-myth/maybe';
 
 export type TimeEntryUpdate = {
 	id: UUID;
-	startTime?: Date | null;
-	endTime?: Date | null;
-	title?: string | null;
+	startTime?: Date;
+	endTime?: Date;
+	title?: string;
 };
 export type NewTimeEntry = Omit<TimeEntryUpdate, 'id'>;
 
@@ -25,14 +25,15 @@ export function initEntries(_crypto: ICrypto) {
 	/**
 	 * True if the entry has no endTime, and is therefore currently being tracked
 	 */
-	const entryOpen = (entry: TimeEntry) => entry && entry.startTime && !entry.endTime;
+	const entryOpen = (entry?: TimeEntry | NewTimeEntry | TimeEntryUpdate) =>
+		entry && entry.startTime && !entry.endTime;
 
 	/**
 	 * True when at least one entry in the list is open
 	 */
 	const hasOpenEntry = (entries: TimeEntry[]) => entries.some(entryOpen);
 
-	const openEntry = (entries: TimeEntry[]): Result<TimeEntry, string> => {
+	const findOpenEntry = (entries: TimeEntry[]): Result<TimeEntry, string> => {
 		const entry = entries.find(entryOpen);
 		if (entry) {
 			return ok(entry);
@@ -60,11 +61,12 @@ export function initEntries(_crypto: ICrypto) {
 		const newId = _crypto.randomUUID();
 		// Ensure a new id
 		const _entry: TimeEntry = entry
-			? ({ ...entry, id: newId } as TimeEntry)
+			? ({ ...entry, createdAt: new Date(), id: newId } as TimeEntry)
 			: {
 					id: newId,
+					title: '',
 					startTime: new Date(),
-					title: ''
+					createdAt: new Date()
 				};
 
 		_entry.id = _crypto.randomUUID();
@@ -86,7 +88,7 @@ export function initEntries(_crypto: ICrypto) {
 			return err(`Entry with id ${entryUpdate.id} does not exist`);
 		}
 
-		const newEntry = replaceProps(entry.value, entryUpdate);
+		const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
 		const index = entries.findIndex((e) => e.id === entry.value.id);
 
 		entries[index] = newEntry;
@@ -103,13 +105,22 @@ export function initEntries(_crypto: ICrypto) {
 		return entries.filter((e) => e.id !== id);
 	};
 
+	const addOrUpdate = (entries: TimeEntry[], newEntry: NewTimeEntry | TimeEntryUpdate) => {
+		const id = isUpdate(newEntry) ? newEntry.id : undefined;
+
+		return id
+			? updateEntry(entries, { id, ...newEntry })
+			: addEntry(entries, newEntry ?? undefined);
+	};
+
 	return {
 		entryOpen,
 		hasOpenEntry,
-		openEntry,
+		findOpenEntry,
 		hasEntry,
 		addEntry,
 		updateEntry,
+		addOrUpdate,
 		deleteEntry
 	};
 }

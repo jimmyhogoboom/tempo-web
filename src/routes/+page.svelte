@@ -6,10 +6,10 @@
 	import EntryListItem from '$components/EntryListItem.svelte';
 	import EntryEdit from '$components/EntryEdit.svelte';
 
-	const { addEntry, openEntry, updateEntry, deleteEntry } = Entries;
+	const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
 	let currentEntry: TimeEntry | undefined;
-	$: currentEntry = unwrapOr(undefined, openEntry($entries));
+	$: currentEntry = unwrapOr(undefined, findOpenEntry($entries));
 
 	$: open = false;
 	let selectedEntry: TimeEntry | undefined;
@@ -17,11 +17,9 @@
 
 	$: savedTitle = '';
 
-	// TODO: addOrUpdate is probably doing too much here, and should be somewhere else.
-	const addOrUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate) => {
-		const id = isUpdate(newEntry) ? newEntry.id : undefined;
+	const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
 		entries.update((es) => {
-			const r = id ? updateEntry(es, { id, ...newEntry }) : addEntry(es, newEntry ?? undefined);
+			const r = addOrUpdate(es, newEntry);
 
 			if (r.isOk) {
 				if (!isUpdate(newEntry)) currentEntry = r.value.entry;
@@ -39,7 +37,7 @@
 		const isClosed = currentEntry && !!currentEntry.endTime;
 
 		const arg: NewTimeEntry | TimeEntryUpdate | undefined = isClosed
-			? ({ ...currentEntry, endTime: null } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
+			? ({ ...currentEntry, endTime: undefined } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
 			: {
 					...currentEntry,
 					title: currentEntry?.title || savedTitle,
@@ -50,11 +48,11 @@
 		// Must be cleared to avoid polluting next entry
 		savedTitle = '';
 
-		addOrUpdate(arg);
+		saveEntry(arg);
 	};
 
 	const handleStopClick = () => {
-		addOrUpdate({ ...currentEntry, endTime: new Date() });
+		saveEntry({ ...currentEntry, endTime: new Date() });
 		currentEntry = undefined;
 	};
 
@@ -62,9 +60,18 @@
 		if (!entry) {
 			savedTitle = text;
 		} else {
-			addOrUpdate({ ...entry, title: text });
+			saveEntry({ ...entry, title: text });
 		}
-		console.log(savedTitle);
+	};
+
+	const handleChange = (entry?: TimeEntry) => (updatedEntry?: TimeEntryUpdate) => {
+		if (!entry) {
+			savedTitle = updatedEntry?.title || '';
+		} else {
+			saveEntry({ ...entry, ...updatedEntry });
+		}
+
+		if (selectedEntry) selectedEntry = undefined;
 	};
 
 	const handleEntryClick = (entry: TimeEntry) => () => {
@@ -80,12 +87,14 @@
 	const handleCopyClick = (entry?: TimeEntry) => () => {
 		if (!entry) return;
 
-		addOrUpdate({
+		saveEntry({
 			...entry,
 			startTime: undefined,
 			endTime: undefined,
 			id: undefined
 		});
+
+		// TODO: Set the new entry as the currentEntry
 	};
 
 	const handleDeleteClick = (entry?: TimeEntry) => () => {
@@ -126,9 +135,10 @@
 					<div class="popout {isSelected && 'open'}">
 						<EntryEdit
 							{entry}
+							onCancelClick={handleEntryClick(entry)}
 							onCopyClick={handleCopyClick(entry)}
 							onDeleteClick={handleDeleteClick(entry)}
-							onChange={handleTitleChange(entry)}
+							onChange={handleChange(entry)}
 						/>
 					</div>
 				{/each}
@@ -168,12 +178,12 @@
 			width: 100%;
 
 			.popout {
-				transition: height 0.6s;
+				transition: height 0.5s;
 				overflow: hidden;
 				height: 0;
 
 				&.open {
-					height: 9rem;
+					height: 11rem;
 				}
 			}
 		}
