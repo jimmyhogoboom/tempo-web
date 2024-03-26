@@ -59,7 +59,7 @@
 	const validateForm = (form: EntryForm) => {
 		const currentEntry = formValuesToEntry(form);
 		const startValid = currentEntry?.startTime !== undefined;
-		const endValid = form?.endTime === undefined || currentEntry?.endTime !== undefined;
+		const endValid = !form?.endTime || currentEntry?.endTime !== undefined;
 
 		return startValid && endValid;
 	};
