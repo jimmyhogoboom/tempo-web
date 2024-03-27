@@ -34,8 +34,8 @@
 	<input
 		type="text"
 		placeholder="Entry description"
-		bind:value={title}
-		on:input={() => onTitleChange(title)}
+		value={title}
+		on:input={(e) => onTitleChange(e.currentTarget.value)}
 	/>
 </div>
 
