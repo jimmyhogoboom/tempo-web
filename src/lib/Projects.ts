@@ -87,6 +87,7 @@ export function init(_crypto: ICrypto) {
 	};
 
 	return {
+		getProject,
 		hasProject,
 		addProject,
 		updateProject,

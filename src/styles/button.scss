@@ -1,0 +1,53 @@
+@use '../styles/colors';
+
+button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  border: 0.2rem solid transparent;
+
+  &.primary {
+    background-color: lighten(colors.$text-dim, 25);
+
+    &:hover {
+      background-color: lighten(colors.$text-dim, 15);
+    }
+
+    &:disabled {
+      background-color: darken(colors.$text-dim, 22);
+      color: darken(colors.$text-dim, 35);
+    }
+  }
+
+  &.secondary {
+    background-color: transparent;
+    color: colors.$text-dim;
+    font-weight: bold;
+
+    &:hover {
+      background-color: transparentize(colors.$text-dim, 0.9);
+    }
+  }
+
+  &.error {
+    color: colors.$primary-100;
+    background-color: transparent;
+    font-weight: bold;
+
+    &:hover {
+      background-color: colors.$primary-300;
+      color: darken(colors.$primary-100, 35);
+    }
+
+    &:disabled {
+      background-color: colors.$primary-500;
+      color: colors.$surface-mixed-300;
+    }
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+

@@ -1,19 +1,27 @@
 <script lang="ts">
+	import { unwrapOr } from 'true-myth/maybe';
 	import Projects, { type NewProject } from '$lib/Projects';
 	import { projects } from '$stores/stores';
 
-	const { addOrUpdate, deleteProject } = Projects;
+	const { addOrUpdate, getProject, deleteProject } = Projects;
 
-	export let onCancelClick: () => void;
-	export let onSaveClick: (projectId?: UUID) => void;
-	export let entry: TimeEntry | undefined;
+	export let onSave: (projectId?: UUID) => void;
+	export let projectId: UUID | undefined;
+
+	$: readOnly = true;
 
 	$: createOpen = false;
 
 	let projectCreating: NewProject = { title: undefined, rate: undefined };
 	$: projectCreating;
 
-	let selectedProjectId: UUID | undefined = entry?.projectId;
+	let selectedProjectId: UUID | undefined;
+	$: selectedProjectId = projectId;
+
+	let selectedProject: Project | undefined;
+	$: selectedProject = selectedProjectId
+		? (unwrapOr(undefined, getProject($projects, selectedProjectId)) as Project)
+		: undefined;
 
 	const handleCreateClick = () => {
 		projects.update((ps) => {
@@ -35,7 +43,12 @@
 </script>
 
 <div>
-	{#if createOpen}
+	{#if readOnly}
+		<button class="title-display secondary" on:click={() => (readOnly = false)}>
+			{selectedProject ? selectedProject.title : 'No project'}
+			{selectedProject?.rate ? ` - $${selectedProject?.rate}` : ''}
+		</button>
+	{:else if createOpen}
 		<div>
 			<input
 				bind:value={projectCreating.title}
@@ -64,10 +77,48 @@
 		{/if}
 		<button on:click={() => (createOpen = true)}>+ Create New Project</button>
 
-		<button on:click={onCancelClick}>Cancel</button>
-		<button on:click={() => onSaveClick(selectedProjectId)}>Ok</button>
+		<button
+			on:click={() => {
+				selectedProjectId = projectId;
+				readOnly = true;
+				createOpen = false;
+			}}
+		>
+			Cancel
+		</button>
+		<button
+			on:click={() => {
+				onSave(selectedProjectId);
+				readOnly = true;
+				createOpen = false;
+			}}
+		>
+			Ok
+		</button>
 	{/if}
 </div>
 
 <style lang="scss">
+	@use '../styles/variables';
+	@use '../styles/button';
+
+	.title-display {
+		margin-left: 1rem;
+	}
+
+	button {
+		padding: 1rem;
+
+		@media screen and (max-width: variables.$small) {
+			padding: 0.5rem;
+		}
+	}
+
+	select {
+		padding: 1rem;
+
+		@media screen and (max-width: variables.$small) {
+			padding: 0.5rem;
+		}
+	}
 </style>

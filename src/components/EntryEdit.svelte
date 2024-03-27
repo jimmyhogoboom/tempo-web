@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { unwrapOr } from 'true-myth/maybe';
 	import { dateFormat, parseTime } from '$lib/utils/dateUtils';
 	import { formatEntryDuration } from '$lib/utils/entryUtils';
+	import { asUUID } from '$lib/utils/uuid';
 	import { time } from '$stores/stores';
 	import Entries, { type TimeEntryUpdate } from '$lib/Entries';
 	import ProjectSelect from './ProjectSelect.svelte';
@@ -98,8 +100,6 @@
 			formValues = { ...formValues, ...change };
 		}
 	};
-
-	const onProjectCancelClick = () => {};
 </script>
 
 <div class="edit flex-col">
@@ -115,9 +115,8 @@
 	<div class="flex responsive-row">
 		<div class="flex project-fields">
 			<ProjectSelect
-				{entry}
-				onCancelClick={onProjectCancelClick}
-				onSaveClick={(e) =>
+				projectId={unwrapOr(undefined, asUUID(formValues.projectId))}
+				onSave={(e) =>
 					onLocalChange({
 						projectId: e
 					})}
@@ -182,59 +181,7 @@
 <style lang="scss">
 	@use '../styles/colors';
 	@use '../styles/variables';
-
-	button {
-		padding: 0.5rem;
-		border-radius: 0.5rem;
-		cursor: pointer;
-		border: 0.2rem solid transparent;
-
-		&.primary {
-			background-color: lighten(colors.$text-dim, 25);
-
-			&:hover {
-				background-color: lighten(colors.$text-dim, 15);
-			}
-
-			&:disabled {
-				background-color: darken(colors.$text-dim, 22);
-				color: darken(colors.$text-dim, 35);
-			}
-		}
-
-		&.secondary {
-			background-color: transparent;
-			color: colors.$text-dim;
-			font-weight: bold;
-
-			&:hover {
-				background-color: transparentize(colors.$text-dim, 0.9);
-			}
-		}
-
-		&.warning {
-		}
-
-		&.error {
-			color: colors.$primary-100;
-			background-color: transparent;
-			font-weight: bold;
-
-			&:hover {
-				background-color: colors.$primary-300;
-				color: darken(colors.$primary-100, 35);
-			}
-
-			&:disabled {
-				background-color: colors.$primary-500;
-				color: colors.$surface-mixed-300;
-			}
-		}
-
-		&:disabled {
-			cursor: default;
-		}
-	}
+	@use '../styles/button';
 
 	.controls {
 		margin: 0 1rem;
@@ -276,14 +223,6 @@
 			flex-direction: column;
 			justify-content: space-between;
 			gap: 1rem;
-		}
-	}
-
-	select {
-		padding: 1rem;
-
-		@media screen and (max-width: variables.$small) {
-			padding: 0.5rem;
 		}
 	}
 
