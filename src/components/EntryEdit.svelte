@@ -105,7 +105,7 @@
 			on:input={(e) => onLocalChange({ title: e.currentTarget.value })}
 		/>
 	</div>
-	<div class="flex justify-right">
+	<div class="flex time-fields">
 		<div class="flex nowrap">
 			<input
 				type="text"
@@ -162,6 +162,7 @@
 
 <style lang="scss">
 	@use '../styles/colors';
+	@use '../styles/variables';
 
 	button {
 		padding: 0.5rem;
@@ -225,6 +226,7 @@
 		font-family: sans-serif;
 		background-color: darken(colors.$surface-100, 4);
 		height: 100%;
+		padding-bottom: 0.5rem;
 	}
 
 	.flex {
@@ -233,10 +235,6 @@
 		flex-wrap: nowrap;
 		justify-content: space-between;
 		align-items: center;
-
-		&.justify-right {
-			justify-content: end;
-		}
 
 		& .gap {
 			display: flex;
@@ -265,11 +263,33 @@
 		box-shadow: inset 0 5px 6px -6px darken(colors.$surface-100, 10);
 	}
 
+	.time-fields {
+		justify-content: end;
+		padding-right: 1rem;
+
+		@media screen and (max-width: variables.$small) {
+			padding: 0;
+			width: 100%;
+			justify-content: space-evenly;
+		}
+	}
+
 	.time-field {
 		max-width: 130px;
 
 		&.total {
 			margin-left: 2rem;
+		}
+
+		@media screen and (max-width: variables.$small) {
+			max-width: 110px;
+			padding: 1rem 0rem;
+
+			justify-content: space-evenly;
+
+			&.total {
+				margin-left: 1rem;
+			}
 		}
 	}
 
@@ -277,5 +297,9 @@
 		display: block;
 		width: 100%;
 		padding: 1.3rem;
+
+		@media screen and (max-width: variables.$small) {
+			padding: 1rem;
+		}
 	}
 </style>

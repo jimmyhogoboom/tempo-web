@@ -183,7 +183,7 @@
 				height: 0;
 
 				&.open {
-					height: 11rem;
+					height: 12rem;
 				}
 			}
 		}
