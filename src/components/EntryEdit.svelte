@@ -3,6 +3,7 @@
 	import { formatEntryDuration } from '$lib/utils/entryUtils';
 	import { time } from '$stores/stores';
 	import Entries, { type TimeEntryUpdate } from '$lib/Entries';
+	import ProjectSelect from './ProjectSelect.svelte';
 
 	const { entryOpen } = Entries;
 
@@ -18,13 +19,15 @@
 		endTime?: string;
 		totalTime?: string;
 		title?: string;
+		projectId?: string;
 	};
 
 	const entryToFormValues = (entry?: TimeEntry | TimeEntryUpdate) => ({
 		startTime: entry && dateFormat(entry?.startTime || undefined),
 		endTime: entry && dateFormat(entry?.endTime || undefined),
 		title: entry ? entry.title : '',
-		totalTime: entry && formatEntryDuration($time, entry)
+		totalTime: entry && formatEntryDuration($time, entry),
+		projectId: entry && (entry.projectId as string)
 	});
 
 	const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
@@ -41,7 +44,8 @@
 					id: entry.id,
 					startTime: timeToDate(entry.createdAt, form.startTime),
 					endTime: timeToDate(entry.createdAt, form.endTime),
-					title: form.title
+					title: form.title,
+					projectId: form.projectId as UUID
 				}
 			: undefined;
 
@@ -52,7 +56,8 @@
 			entryAsForm.startTime === form.startTime &&
 			entryAsForm.endTime === form.endTime &&
 			entryAsForm.totalTime === form.totalTime &&
-			entryAsForm.title === form.title
+			entryAsForm.title === form.title &&
+			entryAsForm.projectId === form.projectId
 		);
 	};
 
@@ -93,6 +98,8 @@
 			formValues = { ...formValues, ...change };
 		}
 	};
+
+	const onProjectCancelClick = () => {};
 </script>
 
 <div class="edit flex-col">
@@ -105,42 +112,54 @@
 			on:input={(e) => onLocalChange({ title: e.currentTarget.value })}
 		/>
 	</div>
-	<div class="flex time-fields">
-		<div class="flex nowrap">
-			<input
-				type="text"
-				class="time-field"
-				value={formValues.startTime}
-				on:input={(e) =>
+	<div class="flex responsive-row">
+		<div class="flex project-fields">
+			<ProjectSelect
+				{entry}
+				onCancelClick={onProjectCancelClick}
+				onSaveClick={(e) =>
 					onLocalChange({
-						startTime: e.currentTarget.value
-					})}
-			/>
-			<span style="padding: 0 0.3rem;">→</span>
-			<input
-				type="text"
-				class="time-field"
-				value={formValues.endTime}
-				on:input={(e) =>
-					onLocalChange({
-						endTime: e.currentTarget.value
+						projectId: e
 					})}
 			/>
 		</div>
-		<!-- TODO: disable this input if the entry is open -->
-		<input
-			type="text"
-			value={formValues.totalTime}
-			class="time-field total"
-			disabled
-			on:input={(e) => {
-				// onLocalChange({
-				// 	totalTime: e.currentTarget.value
-				// })
-				return formValues.totalTime;
-			}}
-			title="Entry duration editing coming soon!"
-		/>
+		<div class="flex time-fields">
+			<div class="flex nowrap">
+				<input
+					type="text"
+					class="time-field"
+					value={formValues.startTime}
+					on:input={(e) =>
+						onLocalChange({
+							startTime: e.currentTarget.value
+						})}
+				/>
+				<span style="padding: 0 0.3rem;">→</span>
+				<input
+					type="text"
+					class="time-field"
+					value={formValues.endTime}
+					on:input={(e) =>
+						onLocalChange({
+							endTime: e.currentTarget.value
+						})}
+				/>
+			</div>
+			<!-- TODO: disable this input if the entry is open -->
+			<input
+				type="text"
+				value={formValues.totalTime}
+				class="time-field total"
+				disabled
+				on:input={(e) => {
+					// onLocalChange({
+					//   totalTime: e.currentTarget.value
+					// })
+					return formValues.totalTime;
+				}}
+				title="Entry duration editing coming soon!"
+			/>
+		</div>
 	</div>
 	<div class="flex controls">
 		<div>
@@ -250,6 +269,22 @@
 
 	.nowrap {
 		white-space: nowrap;
+	}
+
+	.responsive-row {
+		@media screen and (max-width: variables.$small) {
+			flex-direction: column;
+			justify-content: space-between;
+			gap: 1rem;
+		}
+	}
+
+	select {
+		padding: 1rem;
+
+		@media screen and (max-width: variables.$small) {
+			padding: 0.5rem;
+		}
 	}
 
 	input {

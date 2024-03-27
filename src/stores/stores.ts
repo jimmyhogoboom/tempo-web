@@ -2,6 +2,7 @@ import { LocalStorageService, type IStorable } from '$lib/utils/LocalStorageServ
 import { readable, writable } from 'svelte/store';
 
 export const entries = createListStore<TimeEntry>('entry');
+export const projects = createListStore<Project>('project');
 
 // This helps the time initialize as quickly as possible
 const INIT_DATE = new Date();
