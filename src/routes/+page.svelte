@@ -149,6 +149,7 @@
 
 <style lang="scss">
 	@use '../styles/colors';
+	@use '../styles/variables';
 
 	.prompt {
 		font-family: sans-serif;
@@ -184,6 +185,10 @@
 
 				&.open {
 					height: 15rem;
+
+					@media screen and (max-width: variables.$small) {
+						height: 19rem;
+					}
 				}
 			}
 		}

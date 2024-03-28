@@ -267,6 +267,17 @@
 		}
 	}
 
+	.project-fields {
+		margin-left: 1rem;
+
+		@media screen and (max-width: variables.$small) {
+			margin: 0 auto;
+			width: 100%;
+
+			text-align: center;
+		}
+	}
+
 	.title {
 		display: block;
 		width: 100%;

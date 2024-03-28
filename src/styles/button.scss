@@ -1,10 +1,11 @@
 @use '../styles/colors';
 
+$border-thickness: 0.1rem;
 button {
   padding: 0.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  border: 0.2rem solid transparent;
+  border: $border-thickness solid transparent;
 
   &.primary {
     background-color: lighten(colors.$text-dim, 25);
@@ -23,6 +24,7 @@ button {
     background-color: transparent;
     color: colors.$text-dim;
     font-weight: bold;
+    border: $border-thickness solid colors.$text-dim;
 
     &:hover {
       background-color: transparentize(colors.$text-dim, 0.9);
@@ -30,9 +32,10 @@ button {
   }
 
   &.error {
-    color: colors.$primary-100;
+    color: colors.$primary-300;
     background-color: transparent;
     font-weight: bold;
+    border: $border-thickness solid colors.$primary-300;
 
     &:hover {
       background-color: colors.$primary-300;
