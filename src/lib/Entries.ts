@@ -1,11 +1,13 @@
 import Result, { ok, err } from 'true-myth/result';
 import { just, nothing } from 'true-myth/maybe';
+import replaceProps from './utils/replaceProps';
 
 export type TimeEntryUpdate = {
 	id: UUID;
 	startTime?: Date;
 	endTime?: Date;
 	title?: string;
+	projectId?: UUID;
 };
 export type NewTimeEntry = Omit<TimeEntryUpdate, 'id'>;
 
@@ -19,7 +21,6 @@ type AddEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 
 const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
-const replaceProps = <T, U>(existing: T, replace: U): T => ({ ...existing, ...replace });
 
 export function initEntries(_crypto: ICrypto) {
 	/**
@@ -68,8 +69,6 @@ export function initEntries(_crypto: ICrypto) {
 					startTime: new Date(),
 					createdAt: new Date()
 				};
-
-		_entry.id = _crypto.randomUUID();
 
 		const _entries = [...entries, _entry];
 

@@ -5,4 +5,5 @@ type TimeEntry = {
 	endTime?: Date;
 	createdAt: Date;
 	updatedAt?: Date;
+	projectId?: UUID;
 };

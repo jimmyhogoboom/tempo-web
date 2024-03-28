@@ -104,20 +104,23 @@ describe('Entries', () => {
 			const endDate = addHours(2, date);
 			vi.setSystemTime(endDate);
 			const newTitle = 'new title';
+			const projectId = crypto.randomUUID();
 			const expectedEntry = {
 				id: mockId,
 				title: newTitle,
 				startTime: date,
 				endTime: endDate,
 				createdAt: date,
-				updatedAt: endDate
+				updatedAt: endDate,
+				projectId
 			};
 
 			expect(
 				updateEntry(existingEntries, {
 					id: mockId,
 					endTime: endDate,
-					title: newTitle
+					title: newTitle,
+					projectId
 				})
 			).toStrictEqual(
 				ok({
