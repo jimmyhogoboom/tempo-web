@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { unwrapOr } from 'true-myth/maybe';
   import { dateFormat, parseTime } from '$lib/utils/dateUtils';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
+  import { asUUID } from '$lib/utils/uuid';
   import { time } from '$stores/stores';
   import Entries, { type TimeEntryUpdate } from '$lib/Entries';
+  import ProjectSelect from './ProjectSelect.svelte';
 
   const { entryOpen } = Entries;
 
@@ -18,6 +21,7 @@
     endTime?: string;
     totalTime?: string;
     title?: string;
+    projectId?: string;
   };
 
   const entryToFormValues = (entry?: TimeEntry | TimeEntryUpdate) => ({
@@ -25,6 +29,7 @@
     endTime: entry && dateFormat(entry?.endTime || undefined),
     title: entry ? entry.title : '',
     totalTime: entry && formatEntryDuration($time, entry),
+    projectId: entry && (entry.projectId as string),
   });
 
   const timeToDate = (referenceDate: Date = new Date(), text?: string): Date | undefined => {
@@ -42,6 +47,7 @@
           startTime: timeToDate(entry.createdAt, form.startTime),
           endTime: timeToDate(entry.createdAt, form.endTime),
           title: form.title,
+          projectId: form.projectId as UUID,
         }
       : undefined;
 
@@ -52,7 +58,8 @@
       entryAsForm.startTime === form.startTime &&
       entryAsForm.endTime === form.endTime &&
       entryAsForm.totalTime === form.totalTime &&
-      entryAsForm.title === form.title
+      entryAsForm.title === form.title &&
+      entryAsForm.projectId === form.projectId
     );
   };
 
@@ -68,9 +75,11 @@
   $: formDirty = formValues && entry && !formEqualsEntry(formValues, entry);
   $: formValid = validateForm(formValues);
   $: entryCanDelete = !entryOpen(entry);
+  $: readOnly = true;
 
   const onLocalCancelClick = () => {
     formValues = entryToFormValues(entry);
+    readOnly = true;
     onCancelClick();
   };
 
@@ -105,42 +114,54 @@
       on:input={(e) => onLocalChange({ title: e.currentTarget.value })}
     />
   </div>
-  <div class="flex time-fields">
-    <div class="flex nowrap">
-      <input
-        type="text"
-        class="time-field"
-        value={formValues.startTime}
-        on:input={(e) =>
+  <div class="flex responsive-row">
+    <div class="flex project-fields">
+      <ProjectSelect
+        projectId={unwrapOr(undefined, asUUID(formValues.projectId))}
+        bind:readOnly
+        onSave={(e) =>
           onLocalChange({
-            startTime: e.currentTarget.value,
-          })}
-      />
-      <span style="padding: 0 0.3rem;">→</span>
-      <input
-        type="text"
-        class="time-field"
-        value={formValues.endTime}
-        on:input={(e) =>
-          onLocalChange({
-            endTime: e.currentTarget.value,
+            projectId: e,
           })}
       />
     </div>
-    <!-- TODO: disable this input if the entry is open -->
-    <input
-      type="text"
-      value={formValues.totalTime}
-      class="time-field total"
-      disabled
-      on:input={(e) => {
-        // onLocalChange({
-        // 	totalTime: e.currentTarget.value
-        // })
-        return formValues.totalTime;
-      }}
-      title="Entry duration editing coming soon!"
-    />
+    <div class="flex time-fields">
+      <div class="flex nowrap">
+        <input
+          type="text"
+          class="time-field"
+          value={formValues.startTime}
+          on:input={(e) =>
+            onLocalChange({
+              startTime: e.currentTarget.value,
+            })}
+        />
+        <span style="padding: 0 0.3rem;">→</span>
+        <input
+          type="text"
+          class="time-field"
+          value={formValues.endTime}
+          on:input={(e) =>
+            onLocalChange({
+              endTime: e.currentTarget.value,
+            })}
+        />
+      </div>
+      <!-- TODO: disable this input if the entry is open -->
+      <input
+        type="text"
+        value={formValues.totalTime}
+        class="time-field total"
+        disabled
+        on:input={(e) => {
+          // onLocalChange({
+          //   totalTime: e.currentTarget.value
+          // })
+          return formValues.totalTime;
+        }}
+        title="Entry duration editing coming soon!"
+      />
+    </div>
   </div>
   <div class="flex controls">
     <div>
@@ -161,59 +182,7 @@
 <style lang="scss">
   @use '../styles/colors';
   @use '../styles/variables';
-
-  button {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    border: 0.2rem solid transparent;
-
-    &.primary {
-      background-color: lighten(colors.$text-dim, 25);
-
-      &:hover {
-        background-color: lighten(colors.$text-dim, 15);
-      }
-
-      &:disabled {
-        background-color: darken(colors.$text-dim, 22);
-        color: darken(colors.$text-dim, 35);
-      }
-    }
-
-    &.secondary {
-      background-color: transparent;
-      color: colors.$text-dim;
-      font-weight: bold;
-
-      &:hover {
-        background-color: transparentize(colors.$text-dim, 0.9);
-      }
-    }
-
-    &.warning {
-    }
-
-    &.error {
-      color: colors.$primary-100;
-      background-color: transparent;
-      font-weight: bold;
-
-      &:hover {
-        background-color: colors.$primary-300;
-        color: darken(colors.$primary-100, 35);
-      }
-
-      &:disabled {
-        background-color: colors.$primary-500;
-        color: colors.$surface-mixed-300;
-      }
-    }
-
-    &:disabled {
-      cursor: default;
-    }
-  }
+  @use '../styles/button';
 
   .controls {
     margin: 0 1rem;
@@ -248,6 +217,14 @@
 
   .nowrap {
     white-space: nowrap;
+  }
+
+  .responsive-row {
+    @media screen and (max-width: variables.$small) {
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+    }
   }
 
   input {
@@ -288,6 +265,17 @@
       &.total {
         margin-left: 1rem;
       }
+    }
+  }
+
+  .project-fields {
+    margin-left: 1rem;
+
+    @media screen and (max-width: variables.$small) {
+      margin: 0 auto;
+      width: 100%;
+
+      text-align: center;
     }
   }
 

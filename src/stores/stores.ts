@@ -2,6 +2,7 @@ import { LocalStorageService, type IStorable } from '$lib/utils/LocalStorageServ
 import { readable, writable } from 'svelte/store';
 
 export const entries = createListStore<TimeEntry>('entry');
+export const projects = createListStore<Project>('project');
 
 // This helps the time initialize as quickly as possible
 const INIT_DATE = new Date();
@@ -27,6 +28,10 @@ function createListStore<T extends IStorable>(listName: string) {
       const newItems = predicate(items);
       store.set(newItems);
       storage.set(newItems);
+    },
+    where: (predicate: (item: T) => boolean) => {
+      const items = storage.getAll();
+      return items.filter(predicate);
     },
     // init: async () => {
     // 	const items = storage.getAll();

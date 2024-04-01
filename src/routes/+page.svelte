@@ -149,6 +149,7 @@
 
 <style lang="scss">
   @use '../styles/colors';
+  @use '../styles/variables';
 
   .prompt {
     font-family: sans-serif;
@@ -183,7 +184,11 @@
         height: 0;
 
         &.open {
-          height: 12rem;
+          height: 15rem;
+
+          @media screen and (max-width: variables.$small) {
+            height: 19rem;
+          }
         }
       }
     }
@@ -202,7 +207,7 @@
   }
 
   .background-dark {
-    background-color: darken(colors.$background-color, 3);
+    background-color: colors.$background-dark;
     color: colors.$text-dim;
   }
 </style>

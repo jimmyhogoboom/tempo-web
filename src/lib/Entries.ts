@@ -1,11 +1,13 @@
 import Result, { ok, err } from 'true-myth/result';
 import { just, nothing } from 'true-myth/maybe';
+import replaceProps from './utils/replaceProps';
 
 export type TimeEntryUpdate = {
   id: UUID;
   startTime?: Date;
   endTime?: Date;
   title?: string;
+  projectId?: UUID;
 };
 export type NewTimeEntry = Omit<TimeEntryUpdate, 'id'>;
 
@@ -15,9 +17,9 @@ export const isUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate): newEntry is
 
 type AddEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
+type UpdateEntriesOutput = { entries: TimeEntry[]; updatedEntries: TimeEntry[] };
 
 const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
-const replaceProps = <T, U>(existing: T, replace: U): T => ({ ...existing, ...replace });
 
 export function initEntries(_crypto: ICrypto) {
   /**
@@ -66,8 +68,6 @@ export function initEntries(_crypto: ICrypto) {
           createdAt: new Date(),
         };
 
-    _entry.id = _crypto.randomUUID();
-
     const _entries = [...entries, _entry];
 
     return ok({
@@ -90,6 +90,24 @@ export function initEntries(_crypto: ICrypto) {
     return ok({ entries, entry: newEntry } as UpdateEntryOutput);
   };
 
+  const updateEntries = (entries: TimeEntry[], entryUpdates: TimeEntryUpdate[]): UpdateEntriesOutput => {
+    const updates = entryUpdates.reduce((_updates, entryUpdate) => {
+      const entry = getEntry(entries, entryUpdate.id);
+      if (entry.isNothing) {
+        return _updates;
+      }
+
+      const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
+      const index = entries.findIndex((e) => e.id === entry.value.id);
+
+      entries[index] = newEntry;
+
+      return [..._updates, newEntry];
+    }, [] as TimeEntry[]);
+
+    return { entries, updatedEntries: updates };
+  };
+
   const deleteEntry = (entries: TimeEntry[], id: UUID) => {
     const entry = getEntry(entries, id);
     if (entry.isNothing) {
@@ -97,6 +115,10 @@ export function initEntries(_crypto: ICrypto) {
     }
 
     return entries.filter((e) => e.id !== id);
+  };
+
+  const deleteEntries = (entries: TimeEntry[], ids: UUID[]) => {
+    return entries.filter((e) => ids.includes(e.id));
   };
 
   const addOrUpdate = (entries: TimeEntry[], newEntry: NewTimeEntry | TimeEntryUpdate) => {
@@ -112,8 +134,10 @@ export function initEntries(_crypto: ICrypto) {
     hasEntry,
     addEntry,
     updateEntry,
+    updateEntries,
     addOrUpdate,
     deleteEntry,
+    deleteEntries,
   };
 }
 

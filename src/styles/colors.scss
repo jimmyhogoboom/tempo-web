@@ -26,5 +26,8 @@ $surface-mixed-400: #756d6f;
 $surface-mixed-500: #8a8486;
 
 $background-color: $surface-100;
+$background-dark: darken($background-color, 3);
 $text: #b1aaa8;
 $text-dim: $surface-600;
+$success: #84c318; // Green
+$warning: #dacc3e; // Yellow
