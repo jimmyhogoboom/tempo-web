@@ -7,70 +7,69 @@ const _crypto = crypto;
  */
 
 export interface IStorable {
-	id: UUID;
-	createdAt: Date;
-	updatedAt?: Date;
+  id: UUID;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export enum RemoveResult {
-	Removed,
-	AlreadyGone
+  Removed,
+  AlreadyGone,
 }
 
 export class LocalStorageService<T extends IStorable> {
-	#storage: Storage;
-	#crypto: ICrypto;
+  #storage: Storage;
+  #crypto: ICrypto;
 
-	#key: string;
+  #key: string;
 
-	constructor(tableName: string, storage = window.localStorage, crypto: ICrypto = _crypto) {
-		this.#storage = storage;
-		this.#crypto = crypto;
-		this.#key = tableName;
-	}
+  constructor(tableName: string, storage = window.localStorage, crypto: ICrypto = _crypto) {
+    this.#storage = storage;
+    this.#crypto = crypto;
+    this.#key = tableName;
+  }
 
-	getAll(): T[] {
-		try {
-			return JSON.parse(this.#storage.getItem(this.#key) || '[]') || [];
-		} catch {
-			return [];
-		}
-	}
+  getAll(): T[] {
+    try {
+      return JSON.parse(this.#storage.getItem(this.#key) || '[]') || [];
+    } catch {
+      return [];
+    }
+  }
 
-	get(id: UUID) {
-		const items = this.getAll();
-		return Maybe.of(items.find((item) => item.id === id));
-	}
+  get(id: UUID) {
+    const items = this.getAll();
+    return Maybe.of(items.find((item) => item.id === id));
+  }
 
-	set(items: T[]) {
-		this.#storage.setItem(this.#key, JSON.stringify(items));
-	}
+  set(items: T[]) {
+    this.#storage.setItem(this.#key, JSON.stringify(items));
+  }
 
-	add(item: Omit<T, 'id'>) {
-		const items = this.getAll();
+  add(item: Omit<T, 'id'>) {
+    const items = this.getAll();
 
-		const newItem = { ...item, id: this.#crypto.randomUUID() } as T;
+    const newItem = { ...item, id: this.#crypto.randomUUID() } as T;
 
-		items.push(newItem);
-		this.set(items);
+    items.push(newItem);
+    this.set(items);
 
-		return { item: newItem, items };
-	}
+    return { item: newItem, items };
+  }
 
-	remove(item: T | UUID) {
-		const items = this.getAll();
-		const index =
-			typeof item === 'string' ? items.findIndex((i) => i.id === item) : items.indexOf(item);
+  remove(item: T | UUID) {
+    const items = this.getAll();
+    const index = typeof item === 'string' ? items.findIndex((i) => i.id === item) : items.indexOf(item);
 
-		if (index < 0) return { items, result: RemoveResult.AlreadyGone };
+    if (index < 0) return { items, result: RemoveResult.AlreadyGone };
 
-		items.splice(index, 1);
-		this.set(items);
+    items.splice(index, 1);
+    this.set(items);
 
-		return { items, result: RemoveResult.Removed };
-	}
+    return { items, result: RemoveResult.Removed };
+  }
 
-	clear() {
-		this.#storage.clear();
-	}
+  clear() {
+    this.#storage.clear();
+  }
 }

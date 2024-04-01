@@ -1,3 +1,3 @@
 interface ICrypto {
-	randomUUID: () => UUID;
+  randomUUID: () => UUID;
 }
