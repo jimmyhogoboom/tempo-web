@@ -106,7 +106,7 @@
   };
 </script>
 
-<div style="width: 100%;">
+<div class="container">
   {#if readOnly}
     <div class="title-display">
       <button class="secondary" on:click={() => (readOnly = false)}>
@@ -154,7 +154,7 @@
     </div>
   {:else}
     {#if $projects.length < 1}
-      <div>No Projects</div>
+      <div class="empty">No Projects</div>
     {:else}
       <label for="project">Project:</label>
       <select id="project" bind:value={selectedProjectId}>
@@ -170,10 +170,12 @@
     <div class="controls">
       <div>
         <button on:click={() => (createOpen = true)} class="secondary success">+ New</button>
-        <button on:click={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>Edit</button>
-        <button on:click={() => {}} class="error" disabled={!selectedProjectId} on:click={handleDeleteClick}>
-          Delete
-        </button>
+        {#if $projects.length > 0}
+          <button on:click={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>Edit</button>
+          <button on:click={() => {}} class="error" disabled={!selectedProjectId} on:click={handleDeleteClick}>
+            Delete
+          </button>
+        {/if}
       </div>
 
       <div>
@@ -270,5 +272,18 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
+  }
+
+  .empty {
+    padding: 1rem;
+  }
+
+  .container {
+    width: 100%;
+    min-width: 14rem;
+
+    @media screen and (max-width: variables.$small) {
+      padding: 0 1rem;
+    }
   }
 </style>
