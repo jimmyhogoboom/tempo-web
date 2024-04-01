@@ -8,6 +8,8 @@ const _crypto = crypto;
 
 export interface IStorable {
 	id: UUID;
+	createdAt: Date;
+	updatedAt?: Date;
 }
 
 export enum RemoveResult {

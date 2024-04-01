@@ -1,9 +1,6 @@
-type TimeEntry = {
-	id: UUID;
+type TimeEntry = IStorable & {
 	title: string;
 	startTime: Date;
 	endTime?: Date;
-	createdAt: Date;
-	updatedAt?: Date;
 	projectId?: UUID;
 };
