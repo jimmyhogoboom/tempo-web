@@ -8,7 +8,7 @@ const mockCrypto = (uuid: UUID) => ({
 });
 
 const mockId = crypto.randomUUID();
-const { addEntry, updateEntry, deleteEntry } = initEntries(mockCrypto(mockId));
+const { addEntry, updateEntry, updateEntries, deleteEntry } = initEntries(mockCrypto(mockId));
 
 describe('Entries', () => {
 	let date: Date;
@@ -124,7 +124,7 @@ describe('Entries', () => {
 				})
 			).toStrictEqual(
 				ok({
-					entries: [expectedEntry, existingEntries[1]],
+					entries: [expectedEntry, existingEntries.at(-1)],
 					entry: expectedEntry
 				})
 			);
@@ -138,6 +138,80 @@ describe('Entries', () => {
 					title: 'this should fail'
 				})
 			).toStrictEqual(err(`Entry with id ${nonExistant} does not exist`));
+		});
+	});
+
+	describe('updateEntries', () => {
+		let existingEntries: TimeEntry[];
+		const mockId2 = crypto.randomUUID();
+		beforeAll(() => {
+			existingEntries = [
+				{
+					id: mockId,
+					title: 'old title',
+					startTime: date,
+					createdAt: date
+				},
+				{
+					id: mockId2,
+					title: 'other old title',
+					startTime: date,
+					createdAt: date
+				},
+				{
+					id: crypto.randomUUID(),
+					title: 'should be untouched',
+					startTime: date,
+					createdAt: date
+				}
+			];
+		});
+
+		it('updates expected entries', () => {
+			const endDate = addHours(2, date);
+			vi.setSystemTime(endDate);
+			const newTitle = 'new title';
+			const projectId = crypto.randomUUID();
+			const expectedEntries = [
+				{
+					id: mockId,
+					title: newTitle,
+					startTime: date,
+					endTime: endDate,
+					createdAt: date,
+					updatedAt: endDate,
+					projectId
+				},
+				{
+					id: mockId2,
+					title: newTitle,
+					startTime: date,
+					endTime: endDate,
+					createdAt: date,
+					updatedAt: endDate,
+					projectId
+				}
+			];
+
+			expect(
+				updateEntries(existingEntries, [
+					{
+						id: mockId,
+						endTime: endDate,
+						title: newTitle,
+						projectId
+					},
+					{
+						id: mockId2,
+						endTime: endDate,
+						title: newTitle,
+						projectId
+					}
+				])
+			).toStrictEqual({
+				entries: [...expectedEntries, existingEntries.at(-1)],
+				updatedEntries: expectedEntries
+			});
 		});
 	});
 

@@ -1,20 +1,21 @@
 <script lang="ts">
 	import { unwrapOr } from 'true-myth/maybe';
-	import Projects, { type NewProject } from '$lib/Projects';
-	import { projects } from '$stores/stores';
+	import Projects, { type NewProject, type ProjectUpdate } from '$lib/Projects';
+	import Entries from '$lib/Entries';
+	import { projects, entries } from '$stores/stores';
 
-	const { addOrUpdate, getProject } = Projects;
+	const { addOrUpdate, getProject, deleteProject } = Projects;
+	const { updateEntries } = Entries;
 
 	export let onSave: (projectId?: UUID) => void;
 	export let projectId: UUID | undefined;
-
-	$: readOnly = true;
+	export let readOnly: boolean;
 
 	$: createOpen = false;
 	$: editOpen = false;
 
 	let projectCreating: NewProject = { title: undefined, rate: undefined };
-	$: projectCreating = { title: undefined, rate: undefined };
+	$: projectCreating;
 
 	let selectedProjectId: UUID | undefined;
 	$: selectedProjectId = projectId;
@@ -23,6 +24,9 @@
 	$: selectedProject = selectedProjectId
 		? (unwrapOr(undefined, getProject($projects, selectedProjectId)) as Project)
 		: undefined;
+
+	let projectEditing: ProjectUpdate | undefined;
+	$: projectEditing = selectedProject?.id ? { ...selectedProject } : undefined;
 
 	const byProjectName = (p1: Project, p2: Project) => {
 		if (p1.title === p2.title) return 0;
@@ -34,11 +38,15 @@
 		return Number.isNaN(val) ? undefined : val;
 	};
 
+	const onTitleChange = (project: NewProject | ProjectUpdate) => (e: any) => {
+		project.title = e.target.value;
+	};
+
 	// TODO: Find correct type for e
-	const onRateChange = (e: any) => {
+	const onRateChange = (project: NewProject | ProjectUpdate) => (e: any) => {
 		const newRate = filterNumericalInput(e.target.value);
 
-		if (newRate) projectCreating.rate = newRate;
+		if (newRate) project.rate = newRate;
 	};
 
 	// TODO: Find correct type for e
@@ -48,9 +56,11 @@
 		if (e.code.replace(/[^0-9]/g, '').length < 1) e.preventDefault();
 	};
 
-	const handleCreateClick = () => {
+	const handleSaveClick = (project?: NewProject | ProjectUpdate) => () => {
+		if (project === undefined) return;
+
 		projects.update((ps) => {
-			const r = addOrUpdate(ps, projectCreating);
+			const r = addOrUpdate(ps, project);
 
 			if (r.isOk) {
 				selectedProjectId = r.value.project.id;
@@ -64,6 +74,40 @@
 		});
 
 		createOpen = false;
+		editOpen = false;
+	};
+
+	$: handleDeleteClick = () => {
+		if (selectedProjectId === undefined) return;
+
+		const deletedEntries = entries.where((e: TimeEntry) => e.projectId === selectedProjectId);
+		const countMap: { [key: number]: string } = {
+			1: 'the entry',
+			2: 'both entries'
+		};
+		const count = countMap[deletedEntries.length] || `all ${deletedEntries.length} entries`;
+		const warning =
+			deletedEntries.length > 0
+				? `, and ${count} attached to this project will become orphaned`
+				: '';
+
+		if (
+			!confirm(`Are you sure you want to delete this Project? This cannot be undone${warning}.`)
+		) {
+			return;
+		}
+
+		// TODO: This component shouldn't need to know about these details. Handle in the models.
+		projects.update((ps) => deleteProject(ps, selectedProjectId!));
+		entries.update(
+			(es) =>
+				updateEntries(
+					es,
+					deletedEntries.map((e) => ({ ...e, projectId: undefined }))
+				).entries
+		);
+
+		selectedProjectId = undefined;
 	};
 </script>
 
@@ -75,6 +119,28 @@
 				{selectedProject?.rate ? ` - $${selectedProject?.rate}` : ''}
 			</button>
 		</div>
+	{:else if editOpen && projectEditing}
+		<div class="new-project">
+			<input
+				value={projectEditing.title}
+				on:input={onTitleChange(projectEditing)}
+				type="text"
+				id="edit-title"
+				placeholder="Project Title"
+			/>
+			<input
+				value={projectEditing.rate || ''}
+				on:input={onRateChange(projectEditing)}
+				on:keydown={preventNonNumbers}
+				type="text"
+				id="edit-rate"
+				placeholder="Rate"
+			/>
+			<div class="create-buttons">
+				<button class="secondary" on:click={() => (editOpen = false)}>Cancel</button>
+				<button class="primary" on:click={handleSaveClick(projectEditing)}>Save</button>
+			</div>
+		</div>
 	{:else if createOpen}
 		<div class="new-project">
 			<input
@@ -85,7 +151,7 @@
 			/>
 			<input
 				value={projectCreating.rate || ''}
-				on:input={onRateChange}
+				on:input={onRateChange(projectCreating)}
 				on:keydown={preventNonNumbers}
 				type="text"
 				id="rate"
@@ -93,7 +159,7 @@
 			/>
 			<div class="create-buttons">
 				<button class="secondary" on:click={() => (createOpen = false)}>Cancel</button>
-				<button class="primary" on:click={handleCreateClick}>Create</button>
+				<button class="primary" on:click={handleSaveClick(projectCreating)}>Create</button>
 			</div>
 		</div>
 	{:else}
@@ -117,7 +183,14 @@
 				<button on:click={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>
 					Edit
 				</button>
-				<button on:click={() => {}} class="error" disabled={!selectedProjectId}>Delete</button>
+				<button
+					on:click={() => {}}
+					class="error"
+					disabled={!selectedProjectId}
+					on:click={handleDeleteClick}
+				>
+					Delete
+				</button>
 			</div>
 
 			<div>
@@ -126,6 +199,7 @@
 						selectedProjectId = projectId;
 						readOnly = true;
 						createOpen = false;
+						editOpen = false;
 					}}
 					class="secondary"
 				>

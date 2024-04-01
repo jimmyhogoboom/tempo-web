@@ -19,6 +19,7 @@ export const isUpdate = (
 
 type AddEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
+type UpdateEntriesOutput = { entries: TimeEntry[]; updatedEntries: TimeEntry[] };
 
 const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
 
@@ -95,6 +96,27 @@ export function initEntries(_crypto: ICrypto) {
 		return ok({ entries, entry: newEntry } as UpdateEntryOutput);
 	};
 
+	const updateEntries = (
+		entries: TimeEntry[],
+		entryUpdates: TimeEntryUpdate[]
+	): UpdateEntriesOutput => {
+		const updates = entryUpdates.reduce((_updates, entryUpdate) => {
+			const entry = getEntry(entries, entryUpdate.id);
+			if (entry.isNothing) {
+				return _updates;
+			}
+
+			const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
+			const index = entries.findIndex((e) => e.id === entry.value.id);
+
+			entries[index] = newEntry;
+
+			return [..._updates, newEntry];
+		}, [] as TimeEntry[]);
+
+		return { entries, updatedEntries: updates };
+	};
+
 	const deleteEntry = (entries: TimeEntry[], id: UUID) => {
 		const entry = getEntry(entries, id);
 		if (entry.isNothing) {
@@ -102,6 +124,10 @@ export function initEntries(_crypto: ICrypto) {
 		}
 
 		return entries.filter((e) => e.id !== id);
+	};
+
+	const deleteEntries = (entries: TimeEntry[], ids: UUID[]) => {
+		return entries.filter((e) => ids.includes(e.id));
 	};
 
 	const addOrUpdate = (entries: TimeEntry[], newEntry: NewTimeEntry | TimeEntryUpdate) => {
@@ -119,8 +145,10 @@ export function initEntries(_crypto: ICrypto) {
 		hasEntry,
 		addEntry,
 		updateEntry,
+		updateEntries,
 		addOrUpdate,
-		deleteEntry
+		deleteEntry,
+		deleteEntries
 	};
 }
 

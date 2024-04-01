@@ -28,6 +28,10 @@ function createListStore<T extends IStorable>(listName: string) {
 			const newItems = predicate(items);
 			store.set(newItems);
 			storage.set(newItems);
+		},
+		where: (predicate: (item: T) => boolean) => {
+			const items = storage.getAll();
+			return items.filter(predicate);
 		}
 		// init: async () => {
 		// 	const items = storage.getAll();

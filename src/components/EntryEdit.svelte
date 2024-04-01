@@ -75,9 +75,11 @@
 	$: formDirty = formValues && entry && !formEqualsEntry(formValues, entry);
 	$: formValid = validateForm(formValues);
 	$: entryCanDelete = !entryOpen(entry);
+	$: readOnly = true;
 
 	const onLocalCancelClick = () => {
 		formValues = entryToFormValues(entry);
+		readOnly = true;
 		onCancelClick();
 	};
 
@@ -116,6 +118,7 @@
 		<div class="flex project-fields">
 			<ProjectSelect
 				projectId={unwrapOr(undefined, asUUID(formValues.projectId))}
+				bind:readOnly
 				onSave={(e) =>
 					onLocalChange({
 						projectId: e
