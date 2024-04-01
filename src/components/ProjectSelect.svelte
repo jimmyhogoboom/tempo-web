@@ -11,6 +11,7 @@
 	$: readOnly = true;
 
 	$: createOpen = false;
+	$: editOpen = false;
 
 	let projectCreating: NewProject = { title: undefined, rate: undefined };
 	$: projectCreating = { title: undefined, rate: undefined };
@@ -101,7 +102,7 @@
 		{:else}
 			<label for="project">Project:</label>
 			<select id="project" bind:value={selectedProjectId}>
-				<option>- No Project -</option>
+				<option value={undefined}>- No Project -</option>
 				{#each $projects.sort(byProjectName) as project}
 					<option value={project.id}>
 						{project.title}{project.rate ? ` - $${project.rate}/hr` : ''}
@@ -109,28 +110,39 @@
 				{/each}
 			</select>
 		{/if}
-		<button on:click={() => (createOpen = true)} class="secondary">+ Create New Project</button>
 
-		<button
-			on:click={() => {
-				selectedProjectId = projectId;
-				readOnly = true;
-				createOpen = false;
-			}}
-			class="secondary"
-		>
-			Cancel
-		</button>
-		<button
-			on:click={() => {
-				onSave(selectedProjectId);
-				readOnly = true;
-				createOpen = false;
-			}}
-			class="primary"
-		>
-			Ok
-		</button>
+		<div class="controls">
+			<div>
+				<button on:click={() => (createOpen = true)} class="secondary success">+ New</button>
+				<button on:click={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>
+					Edit
+				</button>
+				<button on:click={() => {}} class="error" disabled={!selectedProjectId}>Delete</button>
+			</div>
+
+			<div>
+				<button
+					on:click={() => {
+						selectedProjectId = projectId;
+						readOnly = true;
+						createOpen = false;
+					}}
+					class="secondary"
+				>
+					Cancel
+				</button>
+				<button
+					on:click={() => {
+						onSave(selectedProjectId);
+						readOnly = true;
+						createOpen = false;
+					}}
+					class="primary"
+				>
+					Ok
+				</button>
+			</div>
+		</div>
 	{/if}
 </div>
 
@@ -182,11 +194,24 @@
 	}
 
 	select {
-		padding: 0.5rem;
+		font-size: 1rem;
+		border: none;
+		margin: 0;
+		padding: 1rem;
 		margin-bottom: 1rem;
+		max-width: 15rem;
+		background: darken(colors.$surface-100, 6);
+		color: inherit;
+		box-shadow: inset 0 5px 6px -6px darken(colors.$surface-100, 10);
 
 		@media screen and (max-width: variables.$small) {
 			padding: 0.5rem;
 		}
+	}
+
+	.controls {
+		display: flex;
+		width: 100%;
+		justify-content: space-between;
 	}
 </style>

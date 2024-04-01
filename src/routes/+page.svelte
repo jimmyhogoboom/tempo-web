@@ -207,7 +207,7 @@
 	}
 
 	.background-dark {
-		background-color: darken(colors.$background-color, 3);
+		background-color: colors.$background-dark;
 		color: colors.$text-dim;
 	}
 </style>

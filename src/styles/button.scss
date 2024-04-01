@@ -1,6 +1,7 @@
 @use '../styles/colors';
 
 $border-thickness: 0.1rem;
+$lightened: lighten(colors.$text-dim, 25);
 button {
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -8,7 +9,7 @@ button {
   border: $border-thickness solid transparent;
 
   &.primary {
-    background-color: lighten(colors.$text-dim, 25);
+    background-color: $lightened;
 
     &:hover {
       background-color: lighten(colors.$text-dim, 15);
@@ -22,29 +23,45 @@ button {
 
   &.secondary {
     background-color: transparent;
-    color: colors.$text-dim;
-    font-weight: bold;
-    border: $border-thickness solid colors.$text-dim;
+    color: $lightened;
+    border: $border-thickness solid $lightened;
 
     &:hover {
-      background-color: transparentize(colors.$text-dim, 0.9);
+      background-color: colors.$text-dim;
+      color: colors.$background-dark;
+    }
+
+    &:disabled {
+      background-color: transparent;
+      color: darken(colors.$text-dim, 30);
+      border: $border-thickness solid darken(colors.$text-dim, 40);
+    }
+
+    &.success {
+      color: colors.$success;
+      border: $border-thickness solid (colors.$success);
+
+      &:hover {
+        color: colors.$background-dark;
+        background-color: colors.$success;
+      }
     }
   }
 
   &.error {
     color: colors.$primary-300;
     background-color: transparent;
-    font-weight: bold;
     border: $border-thickness solid colors.$primary-300;
 
     &:hover {
       background-color: colors.$primary-300;
-      color: darken(colors.$primary-100, 35);
+      color: colors.$background-dark;
     }
 
     &:disabled {
-      background-color: colors.$primary-500;
+      background-color: transparent;
       color: colors.$surface-mixed-300;
+      border: $border-thickness solid colors.$surface-mixed-300;
     }
   }
 

@@ -8,6 +8,7 @@
 	$primary-600: #ffb899;
 	$primary-700: #fff2ed;
 
+
 	/** SCSS DARK THEME SURFACE COLORS */
 
 	$surface-100: #222831;
@@ -27,5 +28,8 @@
 
 
   $background-color: $surface-100;
+  $background-dark: darken($background-color, 3);
   $text: #b1aaa8;
   $text-dim: $surface-600;
+  $success: #84c318; // Green
+  $warning: #DACC3E; // Yellow
