@@ -3,6 +3,7 @@
   import Projects, { type NewProject, type ProjectUpdate } from '$lib/Projects';
   import Entries from '$lib/Entries';
   import { projects, entries } from '$stores/stores';
+  import { empty, isNumber } from '$lib/utils/general';
 
   const { addOrUpdate, getProject, deleteProject } = Projects;
   const { updateEntries } = Entries;
@@ -28,32 +29,23 @@
   let projectEditing: ProjectUpdate | undefined;
   $: projectEditing = selectedProject?.id ? { ...selectedProject } : undefined;
 
+  const isNumberOrEmpty = (val?: string | number) => empty(val) || isNumber(val);
+  $: formValid =
+    (createOpen && !empty(projectCreating.title) && isNumberOrEmpty(projectCreating.rate)) ||
+    (editOpen && !empty(projectEditing?.title) && isNumberOrEmpty(projectEditing?.rate));
+
   const byProjectName = (p1: Project, p2: Project) => {
     if (p1.title === p2.title) return 0;
     return p1.title > p2.title ? 1 : -1;
   };
 
-  const filterNumericalInput = (input: string) => {
-    const val = parseFloat(input.replace(/[^0-9.]/g, ''));
-    return Number.isNaN(val) ? undefined : val;
-  };
-
-  const onTitleChange = (project: NewProject | ProjectUpdate) => (e: any) => {
-    project.title = e.target.value;
-  };
-
-  // TODO: Find correct type for e
-  const onRateChange = (project: NewProject | ProjectUpdate) => (e: any) => {
-    const newRate = filterNumericalInput(e.target.value);
-
-    if (newRate) project.rate = newRate;
-  };
-
-  // TODO: Find correct type for e
-  const preventNonNumbers = (e: any) => {
-    const allowedKeys = ['Backspace', 'Period'];
-    if (allowedKeys.includes(e.code)) return;
-    if (e.code.replace(/[^0-9]/g, '').length < 1) e.preventDefault();
+  const onChange = (project: NewProject | ProjectUpdate, key: keyof (NewProject | ProjectUpdate)) => (e: any) => {
+    project = { ...project, [key]: e.target.value };
+    if ('id' in project) {
+      projectEditing = project;
+    } else {
+      projectCreating = project;
+    }
   };
 
   const handleSaveClick = (project?: NewProject | ProjectUpdate) => () => {
@@ -117,39 +109,43 @@
   {:else if editOpen && projectEditing}
     <div class="new-project">
       <input
-        value={projectEditing.title}
-        on:input={onTitleChange(projectEditing)}
+        value={projectEditing.title || ''}
+        on:input={onChange(projectEditing, 'title')}
         type="text"
         id="edit-title"
         placeholder="Project Title"
       />
       <input
         value={projectEditing.rate || ''}
-        on:input={onRateChange(projectEditing)}
-        on:keydown={preventNonNumbers}
+        on:input={onChange(projectEditing, 'rate')}
         type="text"
         id="edit-rate"
         placeholder="Rate"
       />
       <div class="create-buttons">
         <button class="secondary" on:click={() => (editOpen = false)}>Cancel</button>
-        <button class="primary" on:click={handleSaveClick(projectEditing)}>Save</button>
+        <button class="primary" on:click={handleSaveClick(projectEditing)} disabled={!formValid}>Save</button>
       </div>
     </div>
   {:else if createOpen}
     <div class="new-project">
-      <input bind:value={projectCreating.title} type="text" id="title" placeholder="Project Title" />
+      <input
+        value={projectCreating.title || ''}
+        on:input={onChange(projectCreating, 'title')}
+        type="text"
+        id="title"
+        placeholder="Project Title"
+      />
       <input
         value={projectCreating.rate || ''}
-        on:input={onRateChange(projectCreating)}
-        on:keydown={preventNonNumbers}
+        on:input={onChange(projectCreating, 'rate')}
         type="text"
         id="rate"
         placeholder="Rate"
       />
       <div class="create-buttons">
         <button class="secondary" on:click={() => (createOpen = false)}>Cancel</button>
-        <button class="primary" on:click={handleSaveClick(projectCreating)}>Create</button>
+        <button class="primary" on:click={handleSaveClick(projectCreating)} disabled={!formValid}>Create</button>
       </div>
     </div>
   {:else}
