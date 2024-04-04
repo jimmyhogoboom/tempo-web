@@ -22,8 +22,8 @@
 
   let timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   let timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  let entriesPage = ($entries as TimeEntry[]).filter(
-    (entry: TimeEntry) => isAfter(timeStart, entry.startTime) && isBefore(timeEnd, entry.startTime)
+  $: entriesPage = ($entries as TimeEntry[]).filter(
+    (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
 
   const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
