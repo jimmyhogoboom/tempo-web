@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { endOfWeekWithOptions, startOfWeekWithOptions, isAfter, isBefore } from 'date-fns/fp';
   import { unwrapOr } from 'true-myth/result';
   import { entries } from '$stores/stores';
   import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
@@ -6,6 +7,7 @@
   import EntryListItem from '$components/EntryListItem.svelte';
   import EntryEdit from '$components/EntryEdit.svelte';
   import Copyleft from '$components/Copyleft.svelte';
+  import TimePager from '$components/TimePager.svelte';
 
   const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
@@ -17,6 +19,12 @@
   $: selectedEntry = undefined;
 
   $: savedTitle = '';
+
+  let timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  let timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  let entriesPage = ($entries as TimeEntry[]).filter(
+    (entry: TimeEntry) => isAfter(timeStart, entry.startTime) && isBefore(timeEnd, entry.startTime)
+  );
 
   const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
     entries.update((es) => {
@@ -127,11 +135,12 @@
   <div class="page-body">
     <div class="list-wrapper {open && 'open'}">
       <div class="list-container">
+        <TimePager entries={entriesPage} />
         <ul>
-          {#if $entries.length < 1}
+          {#if entriesPage.length < 1}
             <div class="prompt">Hit the start button to start a new entry</div>
           {/if}
-          {#each $entries as entry}
+          {#each entriesPage as entry}
             {@const isSelected = selectedEntry?.id === entry.id}
             <EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
             <div class="popout {isSelected && 'open'}">
@@ -193,12 +202,16 @@
     display: flex;
     flex-direction: column;
     margin: 0 auto;
+    margin-top: 1rem;
     margin-bottom: 2rem;
     max-width: 800px;
     z-index: 1;
 
     .list-container {
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
 
       .popout {
         transition: height 0.5s;
@@ -218,7 +231,7 @@
 
   ul {
     max-width: 800px;
-    margin: 1rem auto;
+    margin: 0 auto;
   }
 
   .full {

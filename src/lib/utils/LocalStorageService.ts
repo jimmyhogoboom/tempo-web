@@ -6,12 +6,6 @@ const _crypto = crypto;
  * Adapted from https://stackoverflow.com/a/23744448
  */
 
-export interface IStorable {
-  id: UUID;
-  createdAt: Date;
-  updatedAt?: Date;
-}
-
 export enum RemoveResult {
   Removed,
   AlreadyGone,
