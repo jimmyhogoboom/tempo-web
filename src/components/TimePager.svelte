@@ -1,5 +1,8 @@
 <script lang="ts">
   import { formattedInterval } from '$lib/utils/entryUtils';
+  import { openModal } from 'svelte-modals';
+  import Modal from './Modal.svelte';
+  import ReportModal from './ReportModal.svelte';
 
   export let entries: TimeEntry[];
   export let OnPrevClick: () => {};
@@ -23,20 +26,11 @@
     <button id="prev" on:click={OnPrevClick}>&lt;</button>
     <div class="info">
       <div>Week 3/31 - 4/6</div>
-      {#if show === ShowOption.time}
-        <div id="total-time">
-          <button on:click={() => setShow(ShowOption.earned)}>
-            Week Total: <span>{totalTime}</span>
-          </button>
-        </div>
-      {/if}
-      {#if show === ShowOption.earned}
-        <div id="total-earned">
-          <button on:click={() => setShow(ShowOption.time)}>
-            Week Total: ${totalEarned}
-          </button>
-        </div>
-      {/if}
+      <div id="total-time">
+        <button on:click={() => openModal(ReportModal)}>
+          Week Total: <span>{totalTime}</span>
+        </button>
+      </div>
     </div>
     <button id="next" on:click={OnNextClick}>&gt;</button>
   </div>

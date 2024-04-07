@@ -8,6 +8,7 @@
   import EntryEdit from '$components/EntryEdit.svelte';
   import Copyleft from '$components/Copyleft.svelte';
   import TimePager from '$components/TimePager.svelte';
+  import { Modals, closeModal } from 'svelte-modals';
 
   const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
@@ -175,6 +176,21 @@
       </div>
     </div>
   </footer>
+  <Modals>
+    <div
+      slot="backdrop"
+      class="backdrop"
+      on:click={closeModal}
+      on:keyup={(e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      }}
+      role="button"
+      aria-label="Close Modal"
+      tabindex="0"
+    />
+  </Modals>
 </div>
 
 <style lang="scss">
@@ -298,5 +314,15 @@
   .github {
     max-width: 3rem;
     filter: brightness(0) saturate(100%) contrast(50%);
+  }
+
+  .backdrop {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
   }
 </style>
