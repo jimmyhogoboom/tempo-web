@@ -9,7 +9,7 @@
   export let OnNextClick: () => {};
 
   // TODO: calculate these
-  let totalTime = formattedInterval(new Date(), new Date('2024-03-31'));
+  let totalTime = formattedInterval(new Date('2024-03-31'), new Date());
   let totalEarned = 1234.45;
 
   enum ShowOption {
