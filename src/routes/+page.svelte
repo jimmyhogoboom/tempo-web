@@ -9,6 +9,7 @@
   import Copyleft from '$components/Copyleft.svelte';
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
+  import { addWeeks } from 'date-fns/fp';
 
   const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
@@ -21,11 +22,23 @@
 
   $: savedTitle = '';
 
-  let timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  let timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: entriesPage = ($entries as TimeEntry[]).filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
+
+  const changePage = (weeksNumber: number) => {
+    timeEnd = addWeeks(weeksNumber, timeEnd);
+    timeStart = addWeeks(weeksNumber, timeStart);
+  };
+
+  const handlePrevClick = () => {
+    changePage(-1);
+  };
+  const handleNextClick = () => {
+    changePage(1);
+  };
 
   const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
     entries.update((es) => {
@@ -136,7 +149,13 @@
   <div class="page-body">
     <div class="list-wrapper {open && 'open'}">
       <div class="list-container">
-        <TimePager entries={entriesPage} />
+        <TimePager
+          entries={entriesPage}
+          startDate={timeStart}
+          endDate={timeEnd}
+          onNextClick={handleNextClick}
+          onPrevClick={handlePrevClick}
+        />
         <ul>
           {#if entriesPage.length < 1}
             <div class="prompt">Hit the start button to start a new entry</div>

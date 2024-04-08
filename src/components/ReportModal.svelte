@@ -1,32 +1,17 @@
 <script lang="ts">
-  import {
-    endOfWeekWithOptions,
-    startOfWeekWithOptions,
-    isAfter,
-    isBefore,
-    differenceInSeconds,
-    intervalToDuration,
-  } from 'date-fns/fp';
+  import { intervalToDuration } from 'date-fns/fp';
   import Modal from './Modal.svelte';
-  import { entries, projects, time } from '$stores/stores';
-  import { entriesTotalValue } from '$lib/utils/entryUtils';
+  import { projects, time } from '$stores/stores';
+  import { entriesTotalValue, entriesTotalTime, formattedDuration } from '$lib/utils/entryUtils';
   import { timerFormat } from '$lib/utils/dateUtils';
 
   export let isOpen: boolean;
+  export let entries: TimeEntry[];
 
-  const liveDurationSeconds = (time: Date, entry?: TimeEntry) =>
-    entry ? differenceInSeconds(entry.startTime, entry.endTime ?? time) : 0;
+  $: totalValue = entriesTotalValue($projects, entries);
 
-  let timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  let timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  $: entriesPage = ($entries as TimeEntry[]).filter(
-    (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
-  );
-
-  $: totalValue = entriesTotalValue($projects, entriesPage);
-
-  $: totalTime = entriesPage.reduce((total, entry) => total + liveDurationSeconds($time, entry), 0);
-  $: formattedTime = timerFormat(intervalToDuration({ start: 0, end: totalTime * 1000 }));
+  $: totalTime = entriesTotalTime(entries, $time);
+  $: formattedTime = formattedDuration(totalTime);
 </script>
 
 <Modal {isOpen}>

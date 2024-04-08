@@ -36,3 +36,12 @@ export const entriesTotalValue = (projects: Project[], entries: TimeEntry[]) => 
 
   return entries.reduce((total, entry) => total + entryTotal(projectRates, entry), 0).toFixed(2);
 };
+
+const liveDurationSeconds = (time: Date, entry?: TimeEntry) =>
+  entry ? differenceInSeconds(entry.startTime, entry.endTime ?? time) : 0;
+
+export const entriesTotalTime = (entries: TimeEntry[], time: Date) =>
+  entries.reduce((total, entry) => total + liveDurationSeconds(time, entry), 0);
+
+export const formattedDuration = (totalTime: number) =>
+  timerFormat(intervalToDuration({ start: 0, end: totalTime * 1000 }));
