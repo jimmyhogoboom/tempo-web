@@ -1,4 +1,4 @@
-import { interval, intervalToDuration, differenceInSeconds } from 'date-fns/fp';
+import { interval, intervalToDuration, differenceInSeconds, differenceInMinutes } from 'date-fns/fp';
 import { timerFormat } from '$lib/utils/dateUtils';
 import type { NewTimeEntry, TimeEntryUpdate } from '$lib/Entries';
 
@@ -11,11 +11,23 @@ export const formatEntryDuration = (time: Date, entry?: TimeEntry | NewTimeEntry
   return liveFormattedInterval(time, entry?.startTime, entry?.endTime);
 };
 
-const entryTotal = (rates: ProjectRates, entry: TimeEntry) => {
+type EntryTotalOptions = {
+  roundToMinute?: boolean;
+};
+
+const entryTotalWithOptions = (options: EntryTotalOptions) => (rates: ProjectRates, entry: TimeEntry) => {
   const ratePerHour = entry.projectId ? rates[entry.projectId] : 0;
+
+  if (options.roundToMinute) {
+    const minutes = entry.endTime ? differenceInMinutes(entry.startTime, entry.endTime) : 0;
+    return (minutes / 60) * ratePerHour;
+  }
+
   const seconds = entry.endTime ? differenceInSeconds(entry.startTime, entry.endTime) : 0;
   return (seconds / 60 / 60) * ratePerHour;
 };
+
+const entryTotal = entryTotalWithOptions({ roundToMinute: true });
 
 export type ProjectRates = {
   [key: Project['id']]: number;
