@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { endOfWeekWithOptions, startOfWeekWithOptions, isAfter, isBefore } from 'date-fns/fp';
   import { unwrapOr } from 'true-myth/result';
   import { entries } from '$stores/stores';
   import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
@@ -6,6 +7,9 @@
   import EntryListItem from '$components/EntryListItem.svelte';
   import EntryEdit from '$components/EntryEdit.svelte';
   import Copyleft from '$components/Copyleft.svelte';
+  import TimePager from '$components/TimePager.svelte';
+  import { Modals, closeModal } from 'svelte-modals';
+  import { addWeeks } from 'date-fns/fp';
 
   const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
@@ -17,6 +21,24 @@
   $: selectedEntry = undefined;
 
   $: savedTitle = '';
+
+  $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  $: entriesPage = ($entries as TimeEntry[]).filter(
+    (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
+  );
+
+  const changePage = (weeksNumber: number) => {
+    timeEnd = addWeeks(weeksNumber, timeEnd);
+    timeStart = addWeeks(weeksNumber, timeStart);
+  };
+
+  const handlePrevClick = () => {
+    changePage(-1);
+  };
+  const handleNextClick = () => {
+    changePage(1);
+  };
 
   const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
     entries.update((es) => {
@@ -127,11 +149,18 @@
   <div class="page-body">
     <div class="list-wrapper {open && 'open'}">
       <div class="list-container">
+        <TimePager
+          entries={entriesPage}
+          startDate={timeStart}
+          endDate={timeEnd}
+          onNextClick={handleNextClick}
+          onPrevClick={handlePrevClick}
+        />
         <ul>
-          {#if $entries.length < 1}
+          {#if entriesPage.length < 1}
             <div class="prompt">Hit the start button to start a new entry</div>
           {/if}
-          {#each $entries as entry}
+          {#each entriesPage as entry}
             {@const isSelected = selectedEntry?.id === entry.id}
             <EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
             <div class="popout {isSelected && 'open'}">
@@ -166,6 +195,21 @@
       </div>
     </div>
   </footer>
+  <Modals>
+    <div
+      slot="backdrop"
+      class="backdrop"
+      on:click={closeModal}
+      on:keyup={(e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      }}
+      role="button"
+      aria-label="Close Modal"
+      tabindex="0"
+    />
+  </Modals>
 </div>
 
 <style lang="scss">
@@ -193,12 +237,16 @@
     display: flex;
     flex-direction: column;
     margin: 0 auto;
+    margin-top: 1rem;
     margin-bottom: 2rem;
     max-width: 800px;
     z-index: 1;
 
     .list-container {
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
 
       .popout {
         transition: height 0.5s;
@@ -218,7 +266,7 @@
 
   ul {
     max-width: 800px;
-    margin: 1rem auto;
+    margin: 0 auto;
   }
 
   .full {
@@ -285,5 +333,15 @@
   .github {
     max-width: 3rem;
     filter: brightness(0) saturate(100%) contrast(50%);
+  }
+
+  .backdrop {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
   }
 </style>
