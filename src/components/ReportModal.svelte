@@ -17,7 +17,22 @@
 <Modal {isOpen}>
   <div>
     <h1>Week Total:</h1>
-    <h2>${totalValue}</h2>
-    <h2>{formattedTime}</h2>
+    <h2>Earned: ${totalValue}</h2>
+    <h2>Logged: {formattedTime}</h2>
   </div>
 </Modal>
+
+<style lang="scss">
+  @use '../styles/colors';
+  @use '../styles/button';
+
+  div {
+    background-color: colors.$background-color;
+    font-family: sans-serif;
+  }
+
+  h1,
+  h2 {
+    margin-bottom: 1rem;
+  }
+</style>

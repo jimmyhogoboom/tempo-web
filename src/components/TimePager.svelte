@@ -27,16 +27,16 @@
 
 <div class="pager-wrapper">
   <div class="pager">
-    <button id="prev" on:click={onPrevClick}>&lt;</button>
+    <button id="prev" on:click={onPrevClick} class="secondary">&lt;</button>
     <div class="info">
       <div>Week {formatDate(startDate)} - {formatDate(endDate)}</div>
       <div id="total-time">
-        <button on:click={() => openModal(ReportModal, { entries })}>
+        <button on:click={() => openModal(ReportModal, { entries })} class="secondary">
           Week Total: <span>{formattedTime}</span>
         </button>
       </div>
     </div>
-    <button id="next" on:click={onNextClick}>&gt;</button>
+    <button id="next" on:click={onNextClick} class="secondary">&gt;</button>
   </div>
 </div>
 
