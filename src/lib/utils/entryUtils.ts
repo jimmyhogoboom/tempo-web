@@ -16,7 +16,7 @@ type EntryTotalOptions = {
 };
 
 const entryTotalWithOptions = (options: EntryTotalOptions) => (rates: ProjectRates, entry: TimeEntry) => {
-  const ratePerHour = entry.projectId ? rates[entry.projectId] : 0;
+  const ratePerHour = entry.projectId ? rates[entry.projectId] || 0 : 0;
 
   if (options.roundToMinute) {
     const minutes = entry.endTime ? differenceInMinutes(entry.startTime, entry.endTime) : 0;
