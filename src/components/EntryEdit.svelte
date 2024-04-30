@@ -1,6 +1,6 @@
 <script lang="ts">
   import { unwrapOr } from 'true-myth/maybe';
-  import { isAfter } from 'date-fns/fp';
+  import { isAfter, addDays } from 'date-fns/fp';
   import { dateFormat, parseTime } from '$lib/utils/dateUtils';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
   import { asUUID } from '$lib/utils/uuid';
@@ -45,11 +45,20 @@
     entry && form
       ? {
           id: entry.id,
-          startTime: timeToDate(entry.createdAt, form.startTime),
-          endTime: timeToDate(
-            entry.endTime && isAfter(entry.endTime, entry.startTime) ? entry.createdAt : entry.endTime,
-            form.endTime
+          startTime: timeToDate(
+            entry.endTime &&
+              isAfter(
+                entry.endTime,
+                // TODO: when startTime is after endTime, assume yesterday
+                // this currently works when editing the start time, but editing end time can give negative values
+                // You might be able to fix this somewhere else, like in calculating duration?
+                timeToDate(entry.createdAt, form.startTime)!
+              )
+              ? addDays(-1, timeToDate(entry.createdAt, form.startTime) || entry.startTime)
+              : entry.startTime,
+            form.startTime
           ),
+          endTime: timeToDate(entry.endTime, form.endTime),
           title: form.title,
           projectId: form.projectId as UUID,
         }
