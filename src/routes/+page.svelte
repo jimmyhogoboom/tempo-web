@@ -10,7 +10,8 @@
     setDay,
   } from 'date-fns/fp';
   import { unwrapOr } from 'true-myth/result';
-  import { entries } from '$stores/stores';
+  import { entries, time } from '$stores/stores';
+  import { formatEntryDuration } from '$lib/utils/entryUtils';
   import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
   import Timer from '$components/Timer.svelte';
   import EntryListItem from '$components/EntryListItem.svelte';
@@ -35,6 +36,8 @@
   $: entriesPage = ($entries as TimeEntry[]).filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
+
+  $: currentTime = formatEntryDuration($time, currentEntry);
 
   const changePage = (weeksNumber: number) => {
     timeEnd = addWeeks(weeksNumber, timeEnd);
@@ -143,15 +146,19 @@
 
   type DayOfWeek = number;
   type WeekDictionary = Record<DayOfWeek, TimeEntry[]>;
-  $: week = entriesPage?.reduce((dict, entry) => {
-    const day = getDay(entry.createdAt);
-    return {
-      ...dict,
-      [day]: [...(dict[day] || []), entry ],
-    };
-  }, {} as WeekDictionary) || {};
+  $: week =
+    entriesPage?.reduce((dict, entry) => {
+      const day = getDay(entry.createdAt);
+      return {
+        ...dict,
+        [day]: [...(dict[day] || []), entry],
+      };
+    }, {} as WeekDictionary) || {};
 </script>
 
+<svelte:head>
+  <title>{currentEntry ? currentTime : 'Tempo'}</title>
+</svelte:head>
 <div class="full background-dark wrapper">
   <header class="head-wrapper">
     <div class="timer">
@@ -180,7 +187,7 @@
           {/if}
           {#each Object.keys(week).map(Number) as dayOfWeek}
             <div class="day-separator">
-              <div class="day">{format('EEE', setDay(dayOfWeek, new Date()) )}</div>
+              <div class="day">{format('EEE', setDay(dayOfWeek, new Date()))}</div>
             </div>
             {#each week[dayOfWeek] as entry}
               {@const isSelected = selectedEntry?.id === entry.id}
