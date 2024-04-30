@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { endOfWeekWithOptions, startOfWeekWithOptions, isAfter, isBefore } from 'date-fns/fp';
+  import {
+    endOfWeekWithOptions,
+    startOfWeekWithOptions,
+    isAfter,
+    isBefore,
+    addWeeks,
+    format,
+    getDay,
+    setDay,
+  } from 'date-fns/fp';
   import { unwrapOr } from 'true-myth/result';
   import { entries } from '$stores/stores';
   import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
@@ -9,7 +18,6 @@
   import Copyleft from '$components/Copyleft.svelte';
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
-  import { addWeeks } from 'date-fns/fp';
 
   const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
 
@@ -132,6 +140,16 @@
       open = false;
     }
   };
+
+  type DayOfWeek = number;
+  type WeekDictionary = Record<DayOfWeek, TimeEntry[]>;
+  $: week = entriesPage?.reduce((dict, entry) => {
+    const day = getDay(entry.createdAt);
+    return {
+      ...dict,
+      [day]: [...(dict[day] || []), entry ],
+    };
+  }, {} as WeekDictionary) || {};
 </script>
 
 <div class="full background-dark wrapper">
@@ -160,18 +178,23 @@
           {#if entriesPage.length < 1}
             <div class="prompt">Hit the start button to start a new entry</div>
           {/if}
-          {#each entriesPage as entry}
-            {@const isSelected = selectedEntry?.id === entry.id}
-            <EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
-            <div class="popout {isSelected && 'open'}">
-              <EntryEdit
-                {entry}
-                onCancelClick={handleEntryClick(entry)}
-                onCopyClick={handleCopyClick(entry)}
-                onDeleteClick={handleDeleteClick(entry)}
-                onChange={handleChange(entry)}
-              />
+          {#each Object.keys(week).map(Number) as dayOfWeek}
+            <div class="day-separator">
+              <div class="day">{format('EEE', setDay(dayOfWeek, new Date()) )}</div>
             </div>
+            {#each week[dayOfWeek] as entry}
+              {@const isSelected = selectedEntry?.id === entry.id}
+              <EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
+              <div class="popout {isSelected && 'open'}">
+                <EntryEdit
+                  {entry}
+                  onCancelClick={handleEntryClick(entry)}
+                  onCopyClick={handleCopyClick(entry)}
+                  onDeleteClick={handleDeleteClick(entry)}
+                  onChange={handleChange(entry)}
+                />
+              </div>
+            {/each}
           {/each}
         </ul>
       </div>
@@ -343,5 +366,15 @@
     left: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: 998;
+  }
+
+  .day-separator {
+    display: flex;
+    justify-content: center;
+
+    & .day {
+      text-align: center;
+      padding: 1rem;
+    }
   }
 </style>

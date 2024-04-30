@@ -1,5 +1,6 @@
 <script lang="ts">
   import { unwrapOr } from 'true-myth/maybe';
+  import { isAfter } from 'date-fns/fp';
   import { dateFormat, parseTime } from '$lib/utils/dateUtils';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
   import { asUUID } from '$lib/utils/uuid';
@@ -45,7 +46,10 @@
       ? {
           id: entry.id,
           startTime: timeToDate(entry.createdAt, form.startTime),
-          endTime: timeToDate(entry.createdAt, form.endTime),
+          endTime: timeToDate(
+            entry.endTime && isAfter(entry.endTime, entry.startTime) ? entry.createdAt : entry.endTime,
+            form.endTime
+          ),
           title: form.title,
           projectId: form.projectId as UUID,
         }
