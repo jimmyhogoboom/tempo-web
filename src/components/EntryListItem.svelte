@@ -1,16 +1,19 @@
 <script lang="ts">
   import { dateFormat } from '$lib/utils/dateUtils';
   import EntryTime from '$components/EntryTime.svelte';
+  import { projects } from '$stores/stores';
 
   export let entry: TimeEntry;
   export let onClick: () => void;
   export let selected: boolean;
   $: selected = false;
+
+  $: project = $projects.find((p) => p.id === entry.projectId);
 </script>
 
 <li class="flex {selected && 'selected'}">
   <button on:click={onClick} class="flex main">
-    <div class="title">
+    <div class="title fade-overflow">
       {#if entry.title.length}
         {entry.title}
       {:else}
@@ -21,6 +24,11 @@
         </div>
       {/if}
     </div>
+    {#if project?.title}
+      <div class="projectTitle {project?.title?.length > 40 ? 'fade-overflow' : ''}">
+        {project?.title}
+      </div>
+    {/if}
     <div class="time"><EntryTime {entry} /></div>
   </button>
 </li>
@@ -71,13 +79,13 @@
   }
 
   .main {
-    gap: 2rem;
+    gap: 1rem;
     margin: 0px;
     width: 100%;
     height: 100%;
     color: inherit;
     border: none;
-    padding: 1rem 2rem;
+    padding: 1rem;
     background: transparent;
     cursor: pointer;
   }
@@ -85,6 +93,10 @@
   li:hover,
   li.selected {
     background-color: colors.$surface-200;
+
+    .fade-overflow:after {
+      background: linear-gradient(to right, transparent, colors.$surface-200);
+    }
   }
 
   li:hover .main,
@@ -93,9 +105,33 @@
   }
 
   .title {
+    position: relative;
     font-weight: bold;
     text-align: start;
     flex-grow: 2;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .fade-overflow:after {
+    content: '';
+    width: 1rem;
+    height: 1rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(to right, transparent, colors.$background-color);
+  }
+
+  .projectTitle {
+    position: relative;
+    color: colors.$surface-400;
+    text-align: end;
+    flex-grow: 1;
+    flex-shrink: 0;
+    max-width: 30%;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .time {
