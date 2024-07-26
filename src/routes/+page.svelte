@@ -20,7 +20,7 @@
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
 
-  const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
+  const { findOpenEntry, deleteEntry } = Entries;
 
   let currentEntry: TimeEntry | undefined;
   $: currentEntry = unwrapOr(undefined, findOpenEntry($entries));
@@ -51,25 +51,30 @@
     changePage(1);
   };
 
-  const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
-    entries.update((es) => {
-      const r = addOrUpdate(es, newEntry);
+  const addOrEdit = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
+    const result = isUpdate(newEntry) ? entries.edit(newEntry) : entries.add(newEntry);
 
-      if (r.isOk) {
-        if (!isUpdate(newEntry)) currentEntry = r.value.entry;
-        return r.value.entries;
-      }
-
+    if (result.isErr) {
       // TODO: better error message handling
-      console.error(r.error);
+      console.error(result.error);
+    }
 
-      return es;
-    });
+    return result;
+  };
+
+  const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
+    const r = addOrEdit(newEntry);
+
+    if (!isUpdate(newEntry) && r.isOk) {
+      currentEntry = r.value;
+    }
   };
 
   const handleStartClick = () => {
     const isClosed = currentEntry && !!currentEntry.endTime;
 
+    // TODO: there should be domain functions for creating these.
+    // e.g. openTask(currentEntry) which returns a copy of the entry wth the endTime removed
     const arg: NewTimeEntry | TimeEntryUpdate = isClosed
       ? ({ ...currentEntry, endTime: undefined } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
       : {
@@ -86,6 +91,7 @@
   };
 
   const handleStopClick = () => {
+    // TODO: there should be a domain function like `closeTask` to set the endTime
     saveEntry({ ...currentEntry, endTime: new Date() });
     currentEntry = undefined;
   };
