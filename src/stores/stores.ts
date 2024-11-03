@@ -23,7 +23,10 @@ export function createListStore<T extends IStorable>(listName: string) {
   const { set, subscribe } = writable(storage.getAll());
 
   return {
-    set,
+    set: (...args: Parameters<typeof set>) => {
+      set(...args);
+      storage.set(args[0]);
+    },
     subscribe,
     update: (fn: Updater<T[]>) => {
       const items = storage.getAll();

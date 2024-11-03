@@ -5,10 +5,8 @@
   import { formatEntryDuration } from '$lib/utils/entryUtils';
   import { asUUID } from '$lib/utils/uuid';
   import { time } from '$stores/stores';
-  import Entries, { type TimeEntryUpdate } from '$lib/Entries';
+  import { entryOpen } from '$lib/Entries';
   import ProjectSelect from './ProjectSelect.svelte';
-
-  const { entryOpen } = Entries;
 
   export let onCancelClick: () => void;
   export let onCopyClick: () => void;

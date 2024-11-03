@@ -12,7 +12,7 @@
   import { unwrapOr } from 'true-myth/result';
   import { entries, time } from '$stores/stores';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
-  import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
+  import Entries, { isUpdate } from '$lib/Entries';
   import Timer from '$components/Timer.svelte';
   import EntryListItem from '$components/EntryListItem.svelte';
   import EntryEdit from '$components/EntryEdit.svelte';
@@ -20,10 +20,10 @@
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
 
-  const { findOpenEntry, deleteEntry } = Entries;
+  const { findOpenEntry, deleteEntry, addOrUpdate } = Entries($entries);
 
   let currentEntry: TimeEntry | undefined;
-  $: currentEntry = unwrapOr(undefined, findOpenEntry($entries));
+  $: currentEntry = unwrapOr(undefined, findOpenEntry());
 
   $: open = false;
   let selectedEntry: TimeEntry | undefined;
@@ -33,6 +33,7 @@
 
   $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  // TODO: This should call a service to load the entries
   $: entriesPage = ($entries as TimeEntry[]).filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
@@ -52,11 +53,14 @@
   };
 
   const addOrEdit = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
-    const result = isUpdate(newEntry) ? entries.edit(newEntry) : entries.add(newEntry);
+    // const result = isUpdate(newEntry) ? entries.edit(newEntry) : entries.add(newEntry);
+    const result = addOrUpdate(newEntry);
 
     if (result.isErr) {
       // TODO: better error message handling
       console.error(result.error);
+    } else {
+      entries.set(result.value.entries);
     }
 
     return result;
@@ -66,11 +70,12 @@
     const r = addOrEdit(newEntry);
 
     if (!isUpdate(newEntry) && r.isOk) {
-      currentEntry = r.value;
+      currentEntry = r.value.entry;
     }
   };
 
   const handleStartClick = () => {
+    // TODO: This is a domain concept, should be a helper/utility in core
     const isClosed = currentEntry && !!currentEntry.endTime;
 
     // TODO: there should be domain functions for creating these.
@@ -143,7 +148,7 @@
         currentEntry = undefined;
       }
       entries.update((es) => {
-        return deleteEntry(es, entry.id);
+        return deleteEntry(entry.id);
       });
       selectedEntry = undefined;
       open = false;
