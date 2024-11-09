@@ -3,7 +3,7 @@ import { readable, writable, type Updater } from 'svelte/store';
 
 export { entries } from '$stores/entries';
 
-export const projects = createListStore<Project>('project');
+export const projects = createLocalStorageStore<Project>('project');
 
 // This helps the time initialize as quickly as possible
 const INIT_DATE = new Date();
@@ -18,7 +18,7 @@ export const time = readable<Date>(INIT_DATE, (set) => {
   };
 });
 
-export function createListStore<T extends IStorable>(listName: string) {
+export function createLocalStorageStore<T extends IStorable>(listName: string) {
   const storage = new LocalStorageService<T>(listName);
   const { set, subscribe } = writable(storage.getAll());
 
@@ -37,6 +37,9 @@ export function createListStore<T extends IStorable>(listName: string) {
     where: (predicate: (item: T) => boolean) => {
       const items = storage.getAll();
       return items.filter(predicate);
+    },
+    all: () => {
+      return storage.getAll();
     },
     // init: async () => {
     // 	const items = storage.getAll();

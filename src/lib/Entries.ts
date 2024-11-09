@@ -1,11 +1,12 @@
 import Result, { ok, err } from 'true-myth/result';
-import { just, nothing } from 'true-myth/maybe';
+import Maybe, { just, nothing } from 'true-myth/maybe';
 import replaceProps from './utils/replaceProps';
 
-// TODO: Output shouldn't include `entries` list
-type AddEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
+type AddEntryOutput = { entries: TimeEntry[]; entry: OpenTimeEntry };
 type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
 type UpdateEntriesOutput = { entries: TimeEntry[]; updatedEntries: TimeEntry[] };
+export type UpdateEntryResult = Result<UpdateEntryOutput, string>;
+export type AddEntryResult = Result<AddEntryOutput, string>;
 
 export const isUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate): newEntry is TimeEntryUpdate => {
   return newEntry !== undefined && 'id' in newEntry;
@@ -18,11 +19,9 @@ const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
  */
 export const entryOpen = (entry?: TimeEntry | NewTimeEntry | TimeEntryUpdate) => entry && entry.startTime && !entry.endTime;
 
-// TODO: what is this.
-// Some of these are more about manipulating the internal array of values in the store
-// Is this a boundary between the raw value of the store and something else?
-// Seems like this should be some kind of service
+// This is a boundary between the raw value of the store and something else
 // Almost all of this logic could be generalized to finding stuff in a list.
+// This is logic specifically for the local storage store
 
 // TODO: Maybe instead of accepting TimeEntry[], it should take a TimeEntryRepository
 export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto) {
@@ -32,13 +31,13 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
   const hasOpenEntry = () => entries.some(entryOpen);
 
   // TODO: This might need to be `findOpenEntries => TimeEntry[]`
-  const findOpenEntry = (): Result<TimeEntry, string> => {
+  const findOpenEntry = (): Result<Maybe<OpenTimeEntry>, string> => {
     const entry = entries.find(entryOpen);
     if (entry) {
-      return ok(entry);
+      return ok(just(entry as OpenTimeEntry));
+    } else {
+      return ok(nothing());
     }
-
-    return err('No open entries');
   };
 
   const hasEntry = (entryId: string) => entries.some(hasId(entryId));
@@ -52,15 +51,15 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
     return nothing();
   };
 
-  const addEntry = (entry?: NewTimeEntry): Result<AddEntryOutput, string> => {
+  const addEntry = (entry?: NewTimeEntry): AddEntryResult => {
     if (hasOpenEntry()) {
       return err("There's already a timer running");
     }
 
     const newId = _crypto.randomUUID();
     // Ensure a new id
-    const _entry: TimeEntry = entry
-      ? ({ ...entry, createdAt: new Date(), id: newId } as TimeEntry)
+    const _entry: OpenTimeEntry = entry
+      ? ({ ...entry, createdAt: new Date(), id: newId } as OpenTimeEntry)
       : {
           id: newId,
           title: '',
@@ -76,7 +75,7 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
     });
   };
 
-  const updateEntry = (entryUpdate: TimeEntryUpdate): Result<UpdateEntryOutput, string> => {
+  const updateEntry = (entryUpdate: TimeEntryUpdate): UpdateEntryResult => {
     const entry = getEntry(entryUpdate.id);
     if (entry.isNothing) {
       return err(`Entry with id ${entryUpdate.id} does not exist`);

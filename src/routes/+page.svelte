@@ -10,9 +10,9 @@
     setDay,
   } from 'date-fns/fp';
   import { unwrapOr } from 'true-myth/result';
+  import Maybe, { just, nothing, unwrapOr as unwrapMaybeOr } from 'true-myth/maybe';
   import { entries, time } from '$stores/stores';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
-  import Entries, { isUpdate } from '$lib/Entries';
   import Timer from '$components/Timer.svelte';
   import EntryListItem from '$components/EntryListItem.svelte';
   import EntryEdit from '$components/EntryEdit.svelte';
@@ -20,10 +20,8 @@
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
 
-  const { findOpenEntry, deleteEntry, addOrUpdate } = Entries($entries);
-
-  let currentEntry: TimeEntry | undefined;
-  $: currentEntry = unwrapOr(undefined, findOpenEntry());
+  let currentEntry: Maybe<OpenTimeEntry>;
+  $: currentEntry = unwrapOr(nothing(), entries.findOpenEntry());
 
   $: open = false;
   let selectedEntry: TimeEntry | undefined;
@@ -33,12 +31,13 @@
 
   $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  // TODO: This should call a service to load the entries
-  $: entriesPage = ($entries as TimeEntry[]).filter(
+
+  // TODO: This may have to be updated directly instead of being reactive to allow the store to do the filtering
+  $: entriesPage = $entries.filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
 
-  $: currentTime = formatEntryDuration($time, currentEntry);
+  $: currentTime = formatEntryDuration($time, unwrapMaybeOr(undefined, currentEntry));
 
   const changePage = (weeksNumber: number) => {
     timeEnd = addWeeks(weeksNumber, timeEnd);
@@ -52,60 +51,56 @@
     changePage(1);
   };
 
-  const addOrEdit = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
-    // const result = isUpdate(newEntry) ? entries.edit(newEntry) : entries.add(newEntry);
-    const result = addOrUpdate(newEntry);
+  const addEntry = (entry: NewTimeEntry) => {
+    const result = entries.add(entry);
 
     if (result.isErr) {
       // TODO: better error message handling
       console.error(result.error);
-    } else {
-      entries.set(result.value.entries);
+      return;
     }
 
-    return result;
+    currentEntry = just(result.value);
   };
 
-  const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
-    const r = addOrEdit(newEntry);
+  const updateEntry = (entry: TimeEntryUpdate) => {
+    const result = entries.update(entry);
 
-    if (!isUpdate(newEntry) && r.isOk) {
-      currentEntry = r.value.entry;
+    if (result.isErr) {
+      // TODO: better error message handling
+      console.error(result.error);
+
+      return;
+    }
+
+    if (currentEntry.isJust && result.value.id === currentEntry.value.id) {
+      currentEntry = just(result.value);
     }
   };
 
   const handleStartClick = () => {
-    // TODO: This is a domain concept, should be a helper/utility in core
-    const isClosed = currentEntry && !!currentEntry.endTime;
-
-    // TODO: there should be domain functions for creating these.
-    // e.g. openTask(currentEntry) which returns a copy of the entry wth the endTime removed
-    const arg: NewTimeEntry | TimeEntryUpdate = isClosed
-      ? ({ ...currentEntry, endTime: undefined } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
-      : {
-          ...currentEntry,
-          title: currentEntry?.title || savedTitle,
-          // Task without start is given one
-          startTime: currentEntry?.startTime ?? new Date(),
-        };
+    addEntry({
+      title: savedTitle,
+      startTime: new Date(),
+    });
 
     // Must be cleared to avoid polluting next entry
     savedTitle = '';
-
-    saveEntry(arg);
   };
 
   const handleStopClick = () => {
-    // TODO: there should be a domain function like `closeTask` to set the endTime
-    saveEntry({ ...currentEntry, endTime: new Date() });
-    currentEntry = undefined;
+    if (currentEntry.isJust) {
+      // TODO: there should be a domain function like `closeTask` to set the endTime
+      updateEntry({ ...currentEntry.value, endTime: new Date() });
+      currentEntry = nothing();
+    }
   };
 
-  const handleTitleChange = (entry?: TimeEntry) => (text: string) => {
-    if (!entry) {
+  const handleTitleChange = (entry: Maybe<TimeEntry>) => (text: string) => {
+    if (entry.isNothing) {
       savedTitle = text;
     } else {
-      saveEntry({ ...entry, title: text });
+      updateEntry({ ...entry.value, title: text });
     }
   };
 
@@ -113,7 +108,7 @@
     if (!entry) {
       savedTitle = updatedEntry?.title || '';
     } else {
-      saveEntry({ ...entry, ...updatedEntry });
+      updateEntry({ ...entry, ...updatedEntry });
     }
 
     if (selectedEntry) selectedEntry = undefined;
@@ -132,11 +127,10 @@
   const handleCopyClick = (entry?: TimeEntry) => () => {
     if (!entry) return;
 
-    saveEntry({
+    addEntry({
       ...entry,
       startTime: undefined,
       endTime: undefined,
-      id: undefined,
     });
 
     // TODO: Set the new entry as the currentEntry
@@ -144,12 +138,11 @@
 
   const handleDeleteClick = (entry?: TimeEntry) => () => {
     if (entry && confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
-      if (currentEntry?.id === entry.id) {
-        currentEntry = undefined;
+      if (currentEntry.isJust && currentEntry.value.id === entry.id) {
+        currentEntry = nothing();
       }
-      entries.update((es) => {
-        return deleteEntry(entry.id);
-      });
+
+      entries.delete(entry.id);
       selectedEntry = undefined;
       open = false;
     }
@@ -168,13 +161,13 @@
 </script>
 
 <svelte:head>
-  <title>{currentEntry ? currentTime : 'Tempo'}</title>
+  <title>{currentEntry.isJust ? currentTime : 'Tempo'}</title>
 </svelte:head>
 <div class="full background-dark wrapper">
   <header class="head-wrapper">
     <div class="timer">
       <Timer
-        entry={currentEntry}
+        entry={unwrapMaybeOr(undefined, currentEntry)}
         onStart={handleStartClick}
         onStop={handleStopClick}
         onTitleChange={handleTitleChange(currentEntry)}

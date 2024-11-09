@@ -4,6 +4,7 @@ type TimeEntry = IStorable & {
   endTime?: Date;
   projectId?: UUID;
 };
+type OpenTimeEntry = Omit<TimeEntry, "endTime">
 type TimeEntryUpdate = {
   id: UUID;
   startTime?: Date;
