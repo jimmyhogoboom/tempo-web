@@ -13,10 +13,12 @@ const entriesLocalStorageStore = createLocalStorageStore<TimeEntry>('entry');
 export const entries = {
   ...entriesLocalStorageStore,
   findOpenEntry: () => {
+    // TODO: Should just be return entriesLocalStorageStore.find(entryOpen); after Entries refactor
     const { findOpenEntry } = Entries(entriesLocalStorageStore.all());
     return findOpenEntry();
   },
   delete: (entryId: TimeEntry['id']) => {
+    // TODO: Should just be return entriesLocalStorageStore.delete(entry); after Entries refactor
     entriesLocalStorageStore.update((es) => {
       const { deleteEntry } = Entries(es);
       return deleteEntry(entryId);
@@ -24,6 +26,7 @@ export const entries = {
   },
   update: (entry: TimeEntryUpdate): UpdateResult => {
     let r: UpdateEntryResult | undefined;
+    // TODO: Should just be const r = entriesLocalStorageStore.update(entry); after Entries refactor
     entriesLocalStorageStore.update((es) => {
       const { updateEntry } = Entries(es);
       r = updateEntry(entry);
@@ -32,7 +35,6 @@ export const entries = {
         return r.value.entries;
       }
 
-      // TODO: better error message handling
       console.error(r.error);
 
       return es;
@@ -40,6 +42,7 @@ export const entries = {
 
     return r?.isOk ? ok(r.value.entry) : err(UNEXEPECTED_ERROR);
   },
+  // TODO: Should just be const r = entriesLocalStorageStore.add(entry); after Entries refactor
   add: (newEntry: NewTimeEntry): AddResult => {
     let r: AddEntryResult | undefined;
     entriesLocalStorageStore.update((es) => {
@@ -50,7 +53,6 @@ export const entries = {
         return r.value.entries;
       }
 
-      // TODO: better error message handling
       console.error(r.error);
 
       return es;

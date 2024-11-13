@@ -22,15 +22,14 @@ export const entryOpen = (entry?: TimeEntry | NewTimeEntry | TimeEntryUpdate) =>
 // This is a boundary between the raw value of the store and something else
 // Almost all of this logic could be generalized to finding stuff in a list.
 // This is logic specifically for the local storage store
+// TODO: Generalize and Move localStorage-related logic (like searching and updating an array) into the localStorage store (stores.ts)
 
-// TODO: Maybe instead of accepting TimeEntry[], it should take a TimeEntryRepository
 export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto) {
   /**
    * True when at least one entry in the list is open
    */
   const hasOpenEntry = () => entries.some(entryOpen);
 
-  // TODO: This might need to be `findOpenEntries => TimeEntry[]`
   const findOpenEntry = (): Result<Maybe<OpenTimeEntry>, string> => {
     const entry = entries.find(entryOpen);
     if (entry) {
@@ -52,6 +51,8 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
   };
 
   const addEntry = (entry?: NewTimeEntry): AddEntryResult => {
+    // TODO: This line is basically the only business logic in here specific to Entries, along with the concept of open
+    // entries. These should be moved directly into the store.
     if (hasOpenEntry()) {
       return err("There's already a timer running");
     }

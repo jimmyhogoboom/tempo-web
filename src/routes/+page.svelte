@@ -32,7 +32,8 @@
   $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
 
-  // TODO: This may have to be updated directly instead of being reactive to allow the store to do the filtering
+  // TODO: How do I make this reactive without having to "load" the entire list of entires?
+  // How do I let the store do the searching instead of using filter right here?
   $: entriesPage = $entries.filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
@@ -55,7 +56,6 @@
     const result = entries.add(entry);
 
     if (result.isErr) {
-      // TODO: better error message handling
       console.error(result.error);
       return;
     }
@@ -67,7 +67,6 @@
     const result = entries.update(entry);
 
     if (result.isErr) {
-      // TODO: better error message handling
       console.error(result.error);
 
       return;
