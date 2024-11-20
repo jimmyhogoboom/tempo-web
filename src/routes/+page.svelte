@@ -9,7 +9,6 @@
     getDay,
     setDay,
   } from 'date-fns/fp';
-  import { unwrapOr } from 'true-myth/result';
   import Maybe, { just, nothing, unwrapOr as unwrapMaybeOr } from 'true-myth/maybe';
   import { entries, time } from '$stores/stores';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
@@ -21,7 +20,7 @@
   import { Modals, closeModal } from 'svelte-modals';
 
   let currentEntry: Maybe<OpenTimeEntry>;
-  $: currentEntry = unwrapOr(nothing(), entries.findOpenEntry());
+  $: currentEntry = entries.findOpenEntry();
 
   $: open = false;
   let selectedEntry: TimeEntry | undefined;
@@ -32,8 +31,7 @@
   $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
 
-  // TODO: How do I make this reactive without having to "load" the entire list of entires?
-  // How do I let the store do the searching instead of using filter right here?
+  // TODO: replace this filter with a new store so we don't have to "load" the entire list of entires.
   $: entriesPage = $entries.filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );

@@ -30,12 +30,12 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
    */
   const hasOpenEntry = () => entries.some(entryOpen);
 
-  const findOpenEntry = (): Result<Maybe<OpenTimeEntry>, string> => {
+  const findOpenEntry = (): Maybe<OpenTimeEntry> => {
     const entry = entries.find(entryOpen);
     if (entry) {
-      return ok(just(entry as OpenTimeEntry));
+      return just(entry as OpenTimeEntry);
     } else {
-      return ok(nothing());
+      return nothing();
     }
   };
 
