@@ -135,5 +135,3 @@ export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypt
     deleteEntry,
   };
 }
-
-// export default initEntries(crypto);
