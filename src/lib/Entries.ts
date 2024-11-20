@@ -17,11 +17,6 @@ export const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === ent
  */
 export const entryOpen = (entry?: TimeEntry) => !!(entry && entry.startTime && !entry.endTime);
 
-// This is a boundary between the raw value of the store and something else
-// Almost all of this logic could be generalized to finding stuff in a list.
-// This is logic specifically for the local storage store
-// TODO: Generalize and Move localStorage-related logic (like searching and updating an array) into the localStorage store (stores.ts)
-
 export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypto = crypto) {
   /**
    * True when at least one entry in the list is open
@@ -49,8 +44,6 @@ export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypt
   };
 
   const addEntry = (entry?: NewTimeEntry): AddEntryResult => {
-    // TODO: This line is basically the only business logic in here specific to Entries, along with the concept of open
-    // entries. These should be moved directly into the store.
     if (hasOpenEntry()) {
       return err("There's already a timer running");
     }
