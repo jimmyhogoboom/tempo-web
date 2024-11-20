@@ -1,34 +1,32 @@
 import Result, { ok, err } from 'true-myth/result';
 import Maybe, { just, nothing } from 'true-myth/maybe';
 import replaceProps from './utils/replaceProps';
+import type { ListStorage } from '$stores/stores';
 
-type AddEntryOutput = { entries: TimeEntry[]; entry: OpenTimeEntry };
-type UpdateEntryOutput = { entries: TimeEntry[]; entry: TimeEntry };
-type UpdateEntriesOutput = { entries: TimeEntry[]; updatedEntries: TimeEntry[] };
-export type UpdateEntryResult = Result<UpdateEntryOutput, string>;
-export type AddEntryResult = Result<AddEntryOutput, string>;
+export type UpdateEntryResult = Result<TimeEntry, string>;
+export type AddEntryResult = Result<OpenTimeEntry, string>;
 
 export const isUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate): newEntry is TimeEntryUpdate => {
   return newEntry !== undefined && 'id' in newEntry;
 };
 
-const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
+export const hasId = (entryId: string) => (entry: TimeEntry) => entry.id === entryId;
 
 /**
  * True if the entry has no endTime, and is therefore currently being tracked
  */
-export const entryOpen = (entry?: TimeEntry | NewTimeEntry | TimeEntryUpdate) => entry && entry.startTime && !entry.endTime;
+export const entryOpen = (entry?: TimeEntry) => !!(entry && entry.startTime && !entry.endTime);
 
 // This is a boundary between the raw value of the store and something else
 // Almost all of this logic could be generalized to finding stuff in a list.
 // This is logic specifically for the local storage store
 // TODO: Generalize and Move localStorage-related logic (like searching and updating an array) into the localStorage store (stores.ts)
 
-export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto) {
+export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypto = crypto) {
   /**
    * True when at least one entry in the list is open
    */
-  const hasOpenEntry = () => entries.some(entryOpen);
+  const hasOpenEntry = () => entries.find(entryOpen);
 
   const findOpenEntry = (): Maybe<OpenTimeEntry> => {
     const entry = entries.find(entryOpen);
@@ -68,12 +66,11 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
           createdAt: new Date(),
         };
 
-    const _entries = [...entries, _entry];
-
-    return ok({
-      entries: _entries,
-      entry: _entry,
+    entries.update((es) => {
+      return es.concat(_entry);
     });
+
+    return ok(_entry);
   };
 
   const updateEntry = (entryUpdate: TimeEntryUpdate): UpdateEntryResult => {
@@ -83,42 +80,48 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
     }
 
     const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
-    const index = entries.findIndex((e) => e.id === entry.value.id);
 
-    entries[index] = newEntry;
+    entries.update((es) => {
+      const index = es.findIndex((e) => e.id === entry.value.id);
 
-    return ok({ entries, entry: newEntry } as UpdateEntryOutput);
+      es[index] = newEntry;
+
+      return es;
+    });
+
+    return ok(newEntry);
   };
 
-  const updateEntries = (entryUpdates: TimeEntryUpdate[]): UpdateEntriesOutput => {
-    const updates = entryUpdates.reduce((_updates, entryUpdate) => {
-      const entry = getEntry(entryUpdate.id);
-      if (entry.isNothing) {
-        return _updates;
-      }
+  const updateEntries = (entryUpdates: TimeEntryUpdate[]): TimeEntry[] => {
+    let updates: TimeEntry[] = [];
+    entries.update((es) => {
+      updates = entryUpdates.reduce((_updates, entryUpdate) => {
+        const entry = getEntry(entryUpdate.id);
+        if (entry.isNothing) {
+          return _updates;
+        }
 
-      const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
-      const index = entries.findIndex((e) => e.id === entry.value.id);
+        const newEntry = { ...replaceProps(entry.value, entryUpdate), updatedAt: new Date() };
+        const index = es.findIndex((e) => e.id === entry.value.id);
 
-      entries[index] = newEntry;
+        es[index] = newEntry;
 
-      return [..._updates, newEntry];
-    }, [] as TimeEntry[]);
+        return [..._updates, newEntry];
+      }, [] as TimeEntry[]);
 
-    return { entries, updatedEntries: updates };
+      return es;
+    });
+
+    return updates;
   };
 
   const deleteEntry = (id: UUID) => {
     const entry = getEntry(id);
     if (entry.isNothing) {
-      return entries;
+      return;
     }
 
-    return entries.filter((e) => e.id !== id);
-  };
-
-  const deleteEntries = (ids: UUID[]) => {
-    return entries.filter((e) => ids.includes(e.id));
+    entries.delete(id);
   };
 
   const addOrUpdate = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
@@ -137,7 +140,6 @@ export default function Entries(entries: TimeEntry[], _crypto: ICrypto = crypto)
     updateEntries,
     addOrUpdate,
     deleteEntry,
-    deleteEntries,
   };
 }
 

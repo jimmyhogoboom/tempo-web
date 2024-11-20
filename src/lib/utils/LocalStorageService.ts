@@ -6,11 +6,6 @@ const _crypto = crypto;
  * Adapted from https://stackoverflow.com/a/23744448
  */
 
-export enum RemoveResult {
-  Removed,
-  AlreadyGone,
-}
-
 export class LocalStorageService<T extends IStorable> {
   #storage: Storage;
   #crypto: ICrypto;
@@ -55,12 +50,12 @@ export class LocalStorageService<T extends IStorable> {
     const items = this.getAll();
     const index = typeof item === 'string' ? items.findIndex((i) => i.id === item) : items.indexOf(item);
 
-    if (index < 0) return { items, result: RemoveResult.AlreadyGone };
+    if (index < 0) return items;
 
     items.splice(index, 1);
     this.set(items);
 
-    return { items, result: RemoveResult.Removed };
+    return items;
   }
 
   clear() {

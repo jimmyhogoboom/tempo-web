@@ -1,7 +1,15 @@
 import { LocalStorageService } from '$lib/utils/LocalStorageService';
-import { readable, writable, type Updater } from 'svelte/store';
+import { readable, writable, type Updater, type Writable } from 'svelte/store';
 
 export { entries } from '$stores/entries';
+
+export interface ListStorage<T> extends Writable<T[]> {
+  find: (predicate: (item: T) => boolean) => T | undefined;
+  where: (predicate: (item: T) => boolean) => T[];
+  all: () => T[];
+  some: (predicate: (item: T) => boolean) => boolean;
+  delete: (id: UUID) => T[];
+}
 
 export const projects = createLocalStorageStore<Project>('project');
 
@@ -18,21 +26,27 @@ export const time = readable<Date>(INIT_DATE, (set) => {
   };
 });
 
-export function createLocalStorageStore<T extends IStorable>(listName: string) {
+export function createLocalStorageStore<T extends IStorable>(listName: string): ListStorage<T> {
   const storage = new LocalStorageService<T>(listName);
-  const { set, subscribe } = writable(storage.getAll());
+  const { set: _set, ...rest } = writable(storage.getAll());
+
+  const set = (...args: Parameters<typeof _set>) => {
+    _set(...args);
+    storage.set(args[0]);
+  };
 
   return {
-    set: (...args: Parameters<typeof set>) => {
-      set(...args);
-      storage.set(args[0]);
-    },
-    subscribe,
+    set,
+    ...rest,
     update: (fn: Updater<T[]>) => {
       const items = storage.getAll();
       const newItems = fn(items);
       set(newItems);
       storage.set(newItems);
+    },
+    find: (predicate: (item: T) => boolean) => {
+      const items = storage.getAll();
+      return items.find(predicate);
     },
     where: (predicate: (item: T) => boolean) => {
       const items = storage.getAll();
@@ -40,6 +54,9 @@ export function createLocalStorageStore<T extends IStorable>(listName: string) {
     },
     all: () => {
       return storage.getAll();
+    },
+    some: (predicate: (item: T) => boolean) => {
+      return storage.getAll().some(predicate);
     },
     // init: async () => {
     // 	const items = storage.getAll();
@@ -58,9 +75,10 @@ export function createLocalStorageStore<T extends IStorable>(listName: string) {
     // 	}
     // 	store.set(storage.getAll().map((i) => (i.id === item.id ? item : i)));
     // },
-    // delete: async (id: UUID) => {
-    // 	const { items } = storage.remove(id);
-    // 	store.set(items);
-    // }
+    delete: (id: UUID) => {
+      const items = storage.remove(id);
+      storage.set(items);
+      return items;
+    },
   };
 }
