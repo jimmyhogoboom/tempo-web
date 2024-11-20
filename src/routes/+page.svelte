@@ -9,10 +9,9 @@
     getDay,
     setDay,
   } from 'date-fns/fp';
-  import { unwrapOr } from 'true-myth/result';
+  import Maybe, { just, nothing, unwrapOr as unwrapMaybeOr } from 'true-myth/maybe';
   import { entries, time } from '$stores/stores';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
-  import Entries, { type NewTimeEntry, type TimeEntryUpdate, isUpdate } from '$lib/Entries';
   import Timer from '$components/Timer.svelte';
   import EntryListItem from '$components/EntryListItem.svelte';
   import EntryEdit from '$components/EntryEdit.svelte';
@@ -20,10 +19,8 @@
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
 
-  const { findOpenEntry, addOrUpdate, deleteEntry } = Entries;
-
-  let currentEntry: TimeEntry | undefined;
-  $: currentEntry = unwrapOr(undefined, findOpenEntry($entries));
+  let currentEntry: Maybe<OpenTimeEntry>;
+  $: currentEntry = entries.findOpenEntry();
 
   $: open = false;
   let selectedEntry: TimeEntry | undefined;
@@ -33,11 +30,13 @@
 
   $: timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
   $: timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  $: entriesPage = ($entries as TimeEntry[]).filter(
+
+  // TODO: replace this filter with a new store so we don't have to "load" the entire list of entires.
+  $: entriesPage = $entries.filter(
     (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
   );
 
-  $: currentTime = formatEntryDuration($time, currentEntry);
+  $: currentTime = formatEntryDuration($time, unwrapMaybeOr(undefined, currentEntry));
 
   const changePage = (weeksNumber: number) => {
     timeEnd = addWeeks(weeksNumber, timeEnd);
@@ -51,50 +50,54 @@
     changePage(1);
   };
 
-  const saveEntry = (newEntry: NewTimeEntry | TimeEntryUpdate) => {
-    entries.update((es) => {
-      const r = addOrUpdate(es, newEntry);
+  const addEntry = (entry: NewTimeEntry) => {
+    const result = entries.add(entry);
 
-      if (r.isOk) {
-        if (!isUpdate(newEntry)) currentEntry = r.value.entry;
-        return r.value.entries;
-      }
+    if (result.isErr) {
+      console.error(result.error);
+      return;
+    }
 
-      // TODO: better error message handling
-      console.error(r.error);
+    currentEntry = just(result.value);
+  };
 
-      return es;
-    });
+  const updateEntry = (entry: TimeEntryUpdate) => {
+    const result = entries.update(entry);
+
+    if (result.isErr) {
+      console.error(result.error);
+
+      return;
+    }
+
+    if (currentEntry.isJust && result.value.id === currentEntry.value.id) {
+      currentEntry = just(result.value);
+    }
   };
 
   const handleStartClick = () => {
-    const isClosed = currentEntry && !!currentEntry.endTime;
-
-    const arg: NewTimeEntry | TimeEntryUpdate = isClosed
-      ? ({ ...currentEntry, endTime: undefined } as TimeEntryUpdate) // Closed task will be re-opened (endTime removed)
-      : {
-          ...currentEntry,
-          title: currentEntry?.title || savedTitle,
-          // Task without start is given one
-          startTime: currentEntry?.startTime ?? new Date(),
-        };
+    addEntry({
+      title: savedTitle,
+      startTime: new Date(),
+    });
 
     // Must be cleared to avoid polluting next entry
     savedTitle = '';
-
-    saveEntry(arg);
   };
 
   const handleStopClick = () => {
-    saveEntry({ ...currentEntry, endTime: new Date() });
-    currentEntry = undefined;
+    if (currentEntry.isJust) {
+      // TODO: there should be a domain function like `closeTask` to set the endTime
+      updateEntry({ ...currentEntry.value, endTime: new Date() });
+      currentEntry = nothing();
+    }
   };
 
-  const handleTitleChange = (entry?: TimeEntry) => (text: string) => {
-    if (!entry) {
+  const handleTitleChange = (entry: Maybe<TimeEntry>) => (text: string) => {
+    if (entry.isNothing) {
       savedTitle = text;
     } else {
-      saveEntry({ ...entry, title: text });
+      updateEntry({ ...entry.value, title: text });
     }
   };
 
@@ -102,7 +105,7 @@
     if (!entry) {
       savedTitle = updatedEntry?.title || '';
     } else {
-      saveEntry({ ...entry, ...updatedEntry });
+      updateEntry({ ...entry, ...updatedEntry });
     }
 
     if (selectedEntry) selectedEntry = undefined;
@@ -121,11 +124,10 @@
   const handleCopyClick = (entry?: TimeEntry) => () => {
     if (!entry) return;
 
-    saveEntry({
+    addEntry({
       ...entry,
       startTime: undefined,
       endTime: undefined,
-      id: undefined,
     });
 
     // TODO: Set the new entry as the currentEntry
@@ -133,12 +135,11 @@
 
   const handleDeleteClick = (entry?: TimeEntry) => () => {
     if (entry && confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
-      if (currentEntry?.id === entry.id) {
-        currentEntry = undefined;
+      if (currentEntry.isJust && currentEntry.value.id === entry.id) {
+        currentEntry = nothing();
       }
-      entries.update((es) => {
-        return deleteEntry(es, entry.id);
-      });
+
+      entries.delete(entry.id);
       selectedEntry = undefined;
       open = false;
     }
@@ -157,13 +158,13 @@
 </script>
 
 <svelte:head>
-  <title>{currentEntry ? currentTime : 'Tempo'}</title>
+  <title>{currentEntry.isJust ? currentTime : 'Tempo'}</title>
 </svelte:head>
 <div class="full background-dark wrapper">
   <header class="head-wrapper">
     <div class="timer">
       <Timer
-        entry={currentEntry}
+        entry={unwrapMaybeOr(undefined, currentEntry)}
         onStart={handleStartClick}
         onStop={handleStopClick}
         onTitleChange={handleTitleChange(currentEntry)}

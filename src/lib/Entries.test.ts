@@ -1,14 +1,26 @@
 import { beforeAll, beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { initEntries, type NewTimeEntry } from '$lib/Entries';
+import Entries from '$lib/Entries';
 import { ok, err } from 'true-myth/result';
 import { addHours } from 'date-fns/fp';
+import type { ListStorage } from '$stores/stores';
 
 const mockCrypto = (uuid: UUID) => ({
   randomUUID: (): UUID => uuid,
 });
 
 const mockId = crypto.randomUUID();
-const { addEntry, updateEntry, updateEntries, deleteEntry } = initEntries(mockCrypto(mockId));
+const mockStorage = (entries: Array<TimeEntry>) => ({
+  find: entries.find,
+  where: vi.fn(),
+  all: () => entries,
+  some: entries.some,
+  delete: vi.fn(),
+  set: vi.fn(),
+  update: vi.fn(),
+  subscribe: vi.fn(),
+});
+const mockStorageInstance = mockStorage([]);
+const { addEntry, updateEntry } = Entries(mockStorageInstance, mockCrypto(mockId));
 
 describe('Entries', () => {
   let date: Date;
@@ -20,6 +32,7 @@ describe('Entries', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(date);
+    vi.resetAllMocks();
   });
 
   afterEach(() => {
@@ -34,12 +47,8 @@ describe('Entries', () => {
         createdAt: date,
         title: '',
       };
-      expect(addEntry([])).toStrictEqual(
-        ok({
-          entries: [expectedEntry],
-          entry: expectedEntry,
-        })
-      );
+      expect(addEntry()).toStrictEqual(ok(expectedEntry));
+      expect(mockStorageInstance.update).toHaveBeenCalledOnce();
     });
 
     it.each<() => [NewTimeEntry, TimeEntry]>([
@@ -56,25 +65,25 @@ describe('Entries', () => {
     ])('adds specified new entry to list', (getCase) => {
       // Cases must be populated through a function to get the value of `date`.
       const [input, expectedEntry] = getCase();
-      expect(addEntry([], input)).toStrictEqual(
-        ok({
-          entries: [expectedEntry],
-          entry: expectedEntry,
-        })
-      );
+      expect(addEntry(input)).toStrictEqual(ok(expectedEntry));
+      expect(mockStorageInstance.update).toHaveBeenCalledOnce();
     });
 
     it('forbids adding open entry when one already exists', () => {
-      expect(
-        addEntry([
-          {
+      const { addEntry } = Entries(
+        {
+          ...mockStorageInstance,
+          find: () => ({
             id: crypto.randomUUID(),
             title: '',
             startTime: date,
             createdAt: date,
-          },
-        ])
-      ).toStrictEqual(err("There's already a timer running"));
+          }),
+        },
+        mockCrypto(mockId)
+      );
+
+      expect(addEntry()).toStrictEqual(err("There's already a timer running"));
     });
   });
 
@@ -111,26 +120,22 @@ describe('Entries', () => {
         updatedAt: endDate,
         projectId,
       };
+      const entries = Entries({ ...mockStorageInstance, find: () => existingEntries[0] }, mockCrypto(mockId));
 
       expect(
-        updateEntry(existingEntries, {
+        entries.updateEntry({
           id: mockId,
           endTime: endDate,
           title: newTitle,
           projectId,
         })
-      ).toStrictEqual(
-        ok({
-          entries: [expectedEntry, existingEntries.at(-1)],
-          entry: expectedEntry,
-        })
-      );
+      ).toStrictEqual(ok(expectedEntry));
     });
 
     it('fails when non-existant entry is updated', () => {
       const nonExistant = crypto.randomUUID();
       expect(
-        updateEntry(existingEntries, {
+        updateEntry({
           id: nonExistant,
           title: 'this should fail',
         })
@@ -189,9 +194,15 @@ describe('Entries', () => {
           projectId,
         },
       ];
+      const storage: ListStorage<TimeEntry> = {
+        ...mockStorageInstance,
+        find: (x) => existingEntries.find(x),
+        update: vi.fn().mockImplementation((fn) => fn(existingEntries)),
+      };
+      const entries = Entries(storage, mockCrypto(mockId));
 
       expect(
-        updateEntries(existingEntries, [
+        entries.updateEntries([
           {
             id: mockId,
             endTime: endDate,
@@ -205,10 +216,8 @@ describe('Entries', () => {
             projectId,
           },
         ])
-      ).toStrictEqual({
-        entries: [...expectedEntries, existingEntries.at(-1)],
-        updatedEntries: expectedEntries,
-      });
+      ).toStrictEqual(expectedEntries);
+      expect(storage.update).toHaveBeenCalledOnce();
     });
   });
 
@@ -232,7 +241,16 @@ describe('Entries', () => {
     });
 
     it('removes expected entry', () => {
-      expect(deleteEntry(existingEntries, mockId)).toStrictEqual([existingEntries[1]]);
+      const storage: ListStorage<TimeEntry> = {
+        ...mockStorageInstance,
+        find: (x) => existingEntries.find(x),
+        update: vi.fn().mockImplementation((fn) => fn(existingEntries)),
+      };
+      const entries = Entries(storage, mockCrypto(mockId));
+
+      entries.deleteEntry(mockId);
+
+      expect(mockStorageInstance.delete).toHaveBeenCalledOnce();
     });
   });
 });

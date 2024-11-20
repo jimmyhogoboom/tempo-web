@@ -1,6 +1,6 @@
 <script lang="ts">
   import EntryTime from '$components/EntryTime.svelte';
-  import Entries from '$lib/Entries';
+  import { entryOpen } from '$lib/Entries';
 
   export let entry: TimeEntry | undefined;
   export let onStart: () => void;
@@ -9,7 +9,7 @@
 
   $: title = entry?.title ?? '';
 
-  $: entryIsOpen = entry && Entries.entryOpen(entry);
+  $: entryIsOpen = entry && entryOpen(entry);
 
   const onClick = () => {
     entryIsOpen ? onStop() : onStart();
