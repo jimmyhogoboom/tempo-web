@@ -1,0 +1,141 @@
+@use 'colors';
+@use 'variables';
+
+.prompt {
+  font-family: sans-serif;
+  font-size: 1.1rem;
+  width: 100%;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.head-wrapper {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  box-shadow: 0px -5px 5px 5px black;
+  z-index: 10;
+}
+
+.list-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  z-index: 1;
+
+  .list-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .popout {
+      transition: height 0.5s;
+      overflow: hidden;
+      height: 0;
+
+      &.open {
+        height: 15rem;
+
+        @media screen and (max-width: variables.$small) {
+          height: 19rem;
+        }
+      }
+    }
+  }
+}
+
+ul {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.full {
+  position: relative;
+  margin: 0 auto;
+  height: 100%;
+  overflow: auto;
+}
+
+.background-dark {
+  background-color: colors.$background-dark;
+  color: colors.$text-dim;
+}
+
+.wrapper {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+header,
+footer {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.page-body {
+  flex-grow: 1;
+}
+
+footer {
+  padding: 4rem 0;
+  background: darken(colors.$surface-100, 10);
+  color: inherit;
+  font-family: sans-serif;
+
+  & .footer-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    margin: 0 auto;
+    max-width: 800px;
+
+    @media screen and (max-width: variables.$small) {
+      padding: 2rem;
+    }
+  }
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.1rem;
+
+  &:hover,
+  &:hover:visited {
+    color: colors.$text;
+  }
+
+  &:visited {
+    color: colors.$surface-400;
+  }
+}
+
+.github {
+  max-width: 3rem;
+  filter: brightness(0) saturate(100%) contrast(50%);
+}
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.day-separator {
+  display: flex;
+  justify-content: center;
+
+  & .day {
+    text-align: center;
+    padding: 1rem;
+  }
+}
