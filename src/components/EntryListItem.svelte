@@ -3,16 +3,19 @@
   import EntryTime from '$components/EntryTime.svelte';
   import { projects } from '$stores/stores';
 
-  export let entry: TimeEntry;
-  export let onClick: () => void;
-  export let selected: boolean;
-  $: selected = false;
+  interface Props {
+    entry: TimeEntry;
+    onClick: () => void;
+    selected: boolean;
+  }
 
-  $: project = $projects.find((p) => p.id === entry.projectId);
+  let { entry, onClick, selected }: Props = $props();
+
+  let project = $derived($projects.find((p) => p.id === entry.projectId));
 </script>
 
 <li class="flex {selected && 'selected'}">
-  <button on:click={onClick} class="flex main">
+  <button onclick={onClick} class="flex main">
     <div class="title fade-overflow">
       {#if entry.title.length}
         {entry.title}
