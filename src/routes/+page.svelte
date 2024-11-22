@@ -195,15 +195,13 @@
               {@const isSelected = selectedEntry?.id === entry.id}
               <EntryListItem {entry} onClick={handleEntryClick(entry)} selected={isSelected} />
               <div class="popout {isSelected && 'open'}">
-                {#if isSelected}
-                  <EntryEdit
-                    {entry}
-                    onCancelClick={handleEntryClick(entry)}
-                    onCopyClick={handleCopyClick(entry)}
-                    onDeleteClick={handleDeleteClick(entry)}
-                    onChange={handleChange(entry)}
-                  />
-                {/if}
+                <EntryEdit
+                  {entry}
+                  onCancelClick={handleEntryClick(entry)}
+                  onCopyClick={handleCopyClick(entry)}
+                  onDeleteClick={handleDeleteClick(entry)}
+                  onChange={handleChange(entry)}
+                />
               </div>
             {/each}
           {/each}
