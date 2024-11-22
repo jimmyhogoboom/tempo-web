@@ -5,38 +5,45 @@
   import { openModal } from 'svelte-modals';
   import ReportModal from './ReportModal.svelte';
 
-  export let entries: TimeEntry[];
-  export let startDate: Date;
-  export let endDate: Date;
-  export let onPrevClick: () => void;
-  export let onNextClick: () => void;
+  interface Props {
+    entries: TimeEntry[];
+    startDate: Date;
+    endDate: Date;
+    onPrevClick: () => void;
+    onNextClick: () => void;
+  }
 
-  $: totalTime = entriesTotalTime(entries, $time);
-  $: formattedTime = formattedDuration(totalTime);
+  let {
+    entries,
+    startDate,
+    endDate,
+    onPrevClick,
+    onNextClick
+  }: Props = $props();
+
+  let totalTime = $derived(entriesTotalTime(entries, $time));
+  let formattedTime = $derived(formattedDuration(totalTime));
 
   const formatDate = format('M/d');
 
-  enum ShowOption {
-    time,
-    earned,
-  }
-  let show = ShowOption.time;
+  type ShowOption = 'time' | 'earned'
+  let show = 'time';
 
   const setShow = (type: ShowOption) => (show = type);
 </script>
 
 <div class="pager-wrapper">
   <div class="pager">
-    <button id="prev" on:click={onPrevClick} class="secondary">&lt;</button>
+    <button id="prev" onclick={onPrevClick} class="secondary">&lt;</button>
     <div class="info">
       <div>Week {formatDate(startDate)} - {formatDate(endDate)}</div>
       <div id="total-time">
-        <button on:click={() => openModal(ReportModal, { entries })} class="secondary">
+        <button onclick={() => openModal(ReportModal, { entries })} class="secondary">
           Week Total: <span>{formattedTime}</span>
         </button>
       </div>
     </div>
-    <button id="next" on:click={onNextClick} class="secondary">&gt;</button>
+    <button id="next" onclick={onNextClick} class="secondary">&gt;</button>
   </div>
 </div>
 

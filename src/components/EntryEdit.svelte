@@ -8,12 +8,21 @@
   import { entryOpen } from '$lib/Entries';
   import ProjectSelect from './ProjectSelect.svelte';
 
-  export let onCancelClick: () => void;
-  export let onCopyClick: () => void;
-  export let onDeleteClick: () => void;
-  export let onChange: (updatedEntry?: TimeEntryUpdate) => void;
-  export let entry: TimeEntry | undefined;
-  $: entry;
+  interface Props {
+    onCancelClick: () => void;
+    onCopyClick: () => void;
+    onDeleteClick: () => void;
+    onChange: (updatedEntry?: TimeEntryUpdate) => void;
+    entry: TimeEntry | undefined;
+  }
+
+  let {
+    onCancelClick,
+    onCopyClick,
+    onDeleteClick,
+    onChange,
+    entry
+  }: Props = $props();
 
   type EntryForm = {
     startTime?: string;
@@ -73,11 +82,11 @@
     return startValid && endValid;
   };
 
-  $: formValues = entryToFormValues(entry);
-  $: formDirty = formValues && entry && !formEqualsEntry(formValues, entry);
-  $: formValid = validateForm(formValues);
-  $: entryCanDelete = !entryOpen(entry);
-  $: readOnly = true;
+  let formValues = $state(entryToFormValues(entry));
+  let formDirty = $derived(formValues && entry && !formEqualsEntry(formValues, entry));
+  let formValid = $derived(validateForm(formValues));
+  let entryCanDelete = $derived(!entryOpen(entry));
+  let readOnly = $state(true);
 
   const onLocalCancelClick = () => {
     formValues = entryToFormValues(entry);
@@ -113,7 +122,7 @@
       type="text"
       placeholder="Entry description"
       value={formValues.title}
-      on:input={(e) => onLocalChange({ title: e.currentTarget.value })}
+      oninput={(e) => onLocalChange({ title: e.currentTarget.value })}
     />
   </div>
   <div class="flex responsive-row">
@@ -133,7 +142,7 @@
           type="text"
           class="time-field"
           value={formValues.startTime}
-          on:input={(e) =>
+          oninput={(e) =>
             onLocalChange({
               startTime: e.currentTarget.value,
             })}
@@ -143,7 +152,7 @@
           type="text"
           class="time-field"
           value={formValues.endTime}
-          on:input={(e) =>
+          oninput={(e) =>
             onLocalChange({
               endTime: e.currentTarget.value,
             })}
@@ -155,7 +164,7 @@
         value={formValues.totalTime}
         class="time-field total"
         disabled
-        on:input={(e) => {
+        oninput={(e) => {
           // onLocalChange({
           //   totalTime: e.currentTarget.value
           // })
@@ -171,12 +180,12 @@
       <!-- 	<button on:click={onCopyClick}>Copy</button> -->
       <!-- {/if} -->
       {#if entryCanDelete}
-        <button on:click={onDeleteClick} class="error">Delete</button>
+        <button onclick={onDeleteClick} class="error">Delete</button>
       {/if}
     </div>
     <div class="gap">
-      <button on:click={onLocalCancelClick} class="secondary">Cancel</button>
-      <button on:click={onSaveClick} class="primary" disabled={!(formDirty && formValid)}>Save</button>
+      <button onclick={onLocalCancelClick} class="secondary">Cancel</button>
+      <button onclick={onSaveClick} class="primary" disabled={!(formDirty && formValid)}>Save</button>
     </div>
   </div>
 </div>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run, handlers } from 'svelte/legacy';
+
   import { unwrapOr } from 'true-myth/maybe';
   import Projects, { type NewProject, type ProjectUpdate } from '$lib/Projects';
   import Entries from '$lib/Entries';
@@ -8,31 +10,43 @@
   const { addOrUpdate, getProject, deleteProject } = Projects;
   const { updateEntries } = Entries;
 
-  export let onSave: (projectId?: UUID) => void;
-  export let projectId: UUID | undefined;
-  export let readOnly: boolean;
+  interface Props {
+    onSave: (projectId?: UUID) => void;
+    projectId: UUID | undefined;
+    readOnly: boolean;
+  }
 
-  $: createOpen = false;
-  $: editOpen = false;
+  let { onSave, projectId, readOnly = $bindable() }: Props = $props();
 
-  let projectCreating: NewProject = { title: undefined, rate: undefined };
-  $: projectCreating;
+  let createOpen = $state(false);
+  
+  let editOpen = $state(false);
+  
 
-  let selectedProjectId: UUID | undefined;
-  $: selectedProjectId = projectId;
+  let projectCreating: NewProject = $state({ title: undefined, rate: undefined });
+  run(() => {
+    projectCreating;
+  });
 
-  let selectedProject: Project | undefined;
-  $: selectedProject = selectedProjectId
+  let selectedProjectId: UUID | undefined = $state();
+  run(() => {
+    selectedProjectId = projectId;
+  });
+
+  let selectedProject: Project | undefined = $derived(selectedProjectId
     ? (unwrapOr(undefined, getProject($projects, selectedProjectId)) as Project)
-    : undefined;
+    : undefined);
+  
 
-  let projectEditing: ProjectUpdate | undefined;
-  $: projectEditing = selectedProject?.id ? { ...selectedProject } : undefined;
+  let projectEditing: ProjectUpdate | undefined = $state();
+  run(() => {
+    projectEditing = selectedProject?.id ? { ...selectedProject } : undefined;
+  });
 
   const isNumberOrEmpty = (val?: string | number) => empty(val) || isNumber(val);
-  $: formValid =
-    (createOpen && !empty(projectCreating.title) && isNumberOrEmpty(projectCreating.rate)) ||
-    (editOpen && !empty(projectEditing?.title) && isNumberOrEmpty(projectEditing?.rate));
+  let formValid =
+    $derived((createOpen && !empty(projectCreating.title) && isNumberOrEmpty(projectCreating.rate)) ||
+    (editOpen && !empty(projectEditing?.title) && isNumberOrEmpty(projectEditing?.rate)));
 
   const byProjectName = (p1: Project, p2: Project) => {
     if (p1.title === p2.title) return 0;
@@ -69,7 +83,7 @@
     editOpen = false;
   };
 
-  $: handleDeleteClick = () => {
+  let handleDeleteClick = $derived(() => {
     if (selectedProjectId === undefined) return;
 
     const deletedEntries = entries.where((e: TimeEntry) => e.projectId === selectedProjectId);
@@ -95,13 +109,13 @@
     );
 
     selectedProjectId = undefined;
-  };
+  });
 </script>
 
 <div class="container">
   {#if readOnly}
     <div class="title-display">
-      <button class="secondary" on:click={() => (readOnly = false)}>
+      <button class="secondary" onclick={() => (readOnly = false)}>
         {selectedProject ? selectedProject.title : 'No project'}
         {selectedProject?.rate ? ` - $${selectedProject?.rate}` : ''}
       </button>
@@ -110,42 +124,42 @@
     <div class="new-project">
       <input
         value={projectEditing.title || ''}
-        on:input={onChange(projectEditing, 'title')}
+        oninput={onChange(projectEditing, 'title')}
         type="text"
         id="edit-title"
         placeholder="Project Title"
       />
       <input
         value={projectEditing.rate || ''}
-        on:input={onChange(projectEditing, 'rate')}
+        oninput={onChange(projectEditing, 'rate')}
         type="text"
         id="edit-rate"
         placeholder="Rate"
       />
       <div class="create-buttons">
-        <button class="secondary" on:click={() => (editOpen = false)}>Cancel</button>
-        <button class="primary" on:click={handleSaveClick(projectEditing)} disabled={!formValid}>Save</button>
+        <button class="secondary" onclick={() => (editOpen = false)}>Cancel</button>
+        <button class="primary" onclick={handleSaveClick(projectEditing)} disabled={!formValid}>Save</button>
       </div>
     </div>
   {:else if createOpen}
     <div class="new-project">
       <input
         value={projectCreating.title || ''}
-        on:input={onChange(projectCreating, 'title')}
+        oninput={onChange(projectCreating, 'title')}
         type="text"
         id="title"
         placeholder="Project Title"
       />
       <input
         value={projectCreating.rate || ''}
-        on:input={onChange(projectCreating, 'rate')}
+        oninput={onChange(projectCreating, 'rate')}
         type="text"
         id="rate"
         placeholder="Rate"
       />
       <div class="create-buttons">
-        <button class="secondary" on:click={() => (createOpen = false)}>Cancel</button>
-        <button class="primary" on:click={handleSaveClick(projectCreating)} disabled={!formValid}>Create</button>
+        <button class="secondary" onclick={() => (createOpen = false)}>Cancel</button>
+        <button class="primary" onclick={handleSaveClick(projectCreating)} disabled={!formValid}>Create</button>
       </div>
     </div>
   {:else}
@@ -165,10 +179,10 @@
 
     <div class="controls">
       <div>
-        <button on:click={() => (createOpen = true)} class="secondary success">+ New</button>
+        <button onclick={() => (createOpen = true)} class="secondary success">+ New</button>
         {#if $projects.length > 0}
-          <button on:click={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>Edit</button>
-          <button on:click={() => {}} class="error" disabled={!selectedProjectId} on:click={handleDeleteClick}>
+          <button onclick={() => (editOpen = true)} class="secondary" disabled={!selectedProjectId}>Edit</button>
+          <button onclick={handlers(() => {}, handleDeleteClick)} class="error" disabled={!selectedProjectId}>
             Delete
           </button>
         {/if}
@@ -176,7 +190,7 @@
 
       <div>
         <button
-          on:click={() => {
+          onclick={() => {
             selectedProjectId = projectId;
             readOnly = true;
             createOpen = false;
@@ -187,7 +201,7 @@
           Cancel
         </button>
         <button
-          on:click={() => {
+          onclick={() => {
             onSave(selectedProjectId);
             readOnly = true;
             createOpen = false;

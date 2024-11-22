@@ -2,14 +2,23 @@
   import EntryTime from '$components/EntryTime.svelte';
   import { entryOpen } from '$lib/Entries';
 
-  export let entry: TimeEntry | undefined;
-  export let onStart: () => void;
-  export let onStop: () => void;
-  export let onTitleChange: (text: string) => void;
+  interface Props {
+    entry: TimeEntry | undefined;
+    onStart: () => void;
+    onStop: () => void;
+    onTitleChange: (text: string) => void;
+  }
 
-  $: title = entry?.title ?? '';
+  let {
+    entry,
+    onStart,
+    onStop,
+    onTitleChange
+  }: Props = $props();
 
-  $: entryIsOpen = entry && entryOpen(entry);
+  let title = $derived(entry?.title ?? '');
+
+  let entryIsOpen = $derived(entry && entryOpen(entry));
 
   const onClick = () => {
     entryIsOpen ? onStop() : onStart();
@@ -23,7 +32,7 @@
     </div>
 
     <button
-      on:click={onClick}
+      onclick={onClick}
       class="button {entryIsOpen ? 'glow' : ''}"
       aria-label={entryIsOpen ? 'Stop timer' : 'Start timer'}
     >
@@ -35,7 +44,7 @@
     type="text"
     placeholder="Entry description"
     value={title}
-    on:input={(e) => onTitleChange(e.currentTarget.value)}
+    oninput={(e) => onTitleChange(e.currentTarget.value)}
   />
 </div>
 
