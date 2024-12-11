@@ -11,10 +11,11 @@ export const entries = {
   findOpenEntry: (): Maybe<OpenTimeEntry> => {
     return entriesStorage.findOpenEntry();
   },
-  update: (entryUpdate: TimeEntryUpdate | TimeEntryUpdate[]): UpdateEntryResult | UpdateEntriesResult => {
-    return Array.isArray(entryUpdate)
-      ? entriesStorage.updateEntries(entryUpdate)
-      : entriesStorage.updateEntry(entryUpdate);
+  update: (entryUpdate: TimeEntryUpdate): UpdateEntryResult => {
+    return entriesStorage.updateEntry(entryUpdate);
+  },
+  updateMany: (entryUpdates: TimeEntryUpdate[]): UpdateEntriesResult => {
+    return entriesStorage.updateEntries(entryUpdates);
   },
   add: (newEntry: NewTimeEntry): AddEntryResult => {
     return entriesStorage.addEntry(newEntry);

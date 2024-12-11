@@ -89,7 +89,7 @@
     // TODO: This component shouldn't need to know about these details. Handle in the models.
     projects.update((ps) => deleteProject(ps, selectedProjectId!));
 
-    entries.update(deletedEntries.map((e) => ({ ...e, projectId: undefined })));
+    entries.updateMany(deletedEntries.map((e) => ({ ...e, projectId: undefined })));
 
     selectedProjectId = undefined;
   };
