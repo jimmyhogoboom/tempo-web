@@ -1,17 +1,22 @@
 <script lang="ts">
   import { closeModal } from 'svelte-modals';
+  
+  interface Props {
+    // provided by Modals
+    isOpen: boolean;
+    children?: import('svelte').Snippet;
+  }
 
-  // provided by Modals
-  export let isOpen: boolean;
+  let { isOpen, children }: Props = $props();
 </script>
 
 {#if isOpen}
   <div role="dialog" class="modal">
     <div class="actions">
-      <button id="x" on:click={closeModal}>✕</button>
+      <button id="x" onclick={closeModal}>✕</button>
     </div>
     <div class="contents">
-      <slot />
+      {@render children?.()}
     </div>
   </div>
 {/if}

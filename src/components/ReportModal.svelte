@@ -1,39 +1,48 @@
 <script lang="ts">
-  import { intervalToDuration } from 'date-fns/fp';
   import Modal from './Modal.svelte';
   import { projects, time } from '$stores/stores';
   import { entriesTotalValue, entriesTotalTime, formattedDuration } from '$lib/utils/entryUtils';
 
-  export let isOpen: boolean;
-  export let entries: TimeEntry[];
+  interface Props {
+    isOpen: boolean;
+    entries: TimeEntry[];
+  }
 
-  $: totalValue = entriesTotalValue($projects, entries);
+  let { isOpen, entries }: Props = $props();
 
-  $: totalTime = entriesTotalTime(entries, $time);
-  $: formattedTime = formattedDuration(totalTime);
+  let totalValue = $derived(entriesTotalValue($projects, entries));
 
-  $: projectNames = $projects.reduce((names, project)=> ({
-    ...names,
-    [project.id]: project.title
-  }), {} as Record<string, string>);
+  let totalTime = $derived(entriesTotalTime(entries, $time));
+  let formattedTime = $derived(formattedDuration(totalTime));
+
+  let projectNames = $derived(
+    $projects.reduce(
+      (names, project) => ({
+        ...names,
+        [project.id]: project.title,
+      }),
+      {} as Record<string, string>
+    )
+  );
 
   type ProjectEntries = {
-    entries: TimeEntry[],
-    projectName: string
+    entries: TimeEntry[];
+    projectName: string;
   };
   type ProjectDictionary = Record<UUID | '$$NOPROJECT', ProjectEntries>;
-  let projectDictionary: ProjectDictionary;
-  $: projectDictionary = entries.reduce((dict, entry) => {
-    const projectId = entry.projectId ?? '$$NOPROJECT';
+  let projectDictionary: ProjectDictionary = $derived(
+    entries.reduce((dict, entry) => {
+      const projectId = entry.projectId ?? '$$NOPROJECT';
 
-    const newVal = dict[projectId] || { entries: [], projectName: projectNames[projectId] || 'No Project' };
-    newVal.entries.push(entry);
+      const newVal = dict[projectId] || { entries: [], projectName: projectNames[projectId] || 'No Project' };
+      newVal.entries.push(entry);
 
-    return {
-      ...dict,
-      [projectId]: newVal,
-    };
-  }, {} as ProjectDictionary);
+      return {
+        ...dict,
+        [projectId]: newVal,
+      };
+    }, {} as ProjectDictionary)
+  );
 </script>
 
 <Modal {isOpen}>
@@ -49,13 +58,14 @@
         <h3 class="name">{projectEntries.projectName}:</h3>
         <div class="values">
           <div>{formattedDuration(entriesTotalTime(projectEntries.entries, $time))}</div>
-          {#if $projects.find(p => p.id === projectId)?.rate}
+          {#if $projects.find((p) => p.id === projectId)?.rate}
             <div>${entriesTotalValue($projects, projectEntries.entries)}</div>
           {/if}
         </div>
       </div>
     {/each}
-  <div>
+    <div></div>
+  </div>
 </Modal>
 
 <style lang="scss">

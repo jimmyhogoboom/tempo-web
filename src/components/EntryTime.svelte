@@ -2,9 +2,13 @@
   import { time } from '$stores/stores';
   import { formatEntryDuration } from '$lib/utils/entryUtils';
 
-  export let entry: TimeEntry | undefined;
+  interface Props {
+    entry: TimeEntry | undefined;
+  }
 
-  $: formatted = formatEntryDuration($time, entry);
+  let { entry }: Props = $props();
+
+  let formatted = $derived(formatEntryDuration($time, entry));
 </script>
 
 <div class="entry-time">{formatted}</div>

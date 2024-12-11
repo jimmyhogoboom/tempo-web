@@ -51,7 +51,6 @@
 
 ul {
   max-width: 800px;
-  margin: 0 auto;
 }
 
 .full {
@@ -113,11 +112,6 @@ a {
   &:visited {
     color: colors.$surface-400;
   }
-}
-
-.github {
-  max-width: 3rem;
-  filter: brightness(0) saturate(100%) contrast(50%);
 }
 
 .backdrop {

@@ -1,7 +1,6 @@
 import Result, { ok, err } from 'true-myth/result';
 import { just, nothing } from 'true-myth/maybe';
 import replaceProps from './utils/replaceProps';
-import type { IStorable } from './utils/LocalStorageService';
 
 export type Update<T extends IStorable> = {
   [Property in keyof T]+?: T[Property];
@@ -98,9 +97,7 @@ export function init<T extends IStorable>(_crypto: ICrypto) {
   };
 
   const addOrUpdate = (entries: T[], newEntry: Create<T> | Update<T>) => {
-    const id = isUpdate(newEntry) ? newEntry.id : undefined;
-
-    return id ? update(entries, { id, ...newEntry } as Update<T>) : add(entries, newEntry ?? undefined);
+    return isUpdate(newEntry) ? update(entries, newEntry as Update<T>) : add(entries, newEntry ?? undefined);
   };
 
   return {

@@ -18,25 +18,25 @@
   import Copyleft from '$components/Copyleft.svelte';
   import TimePager from '$components/TimePager.svelte';
   import { Modals, closeModal } from 'svelte-modals';
-  import '../../static/github.svg';
+  import github from '$lib/assets/github.svg';
   import '../styles/global.scss';
 
-  let currentEntry = entries.findOpenEntry();
+  let currentEntry = $state(entries.findOpenEntry());
 
-  let open = false;
-  let selectedEntry: TimeEntry | undefined = undefined;
+  let open = $state(false);
+  let selectedEntry: TimeEntry | undefined = $state(undefined);
 
-  let savedTitle = '';
-
-  let timeEnd = endOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
-  let timeStart = startOfWeekWithOptions({ weekStartsOn: 0 }, new Date());
+  let timeEnd = $state(endOfWeekWithOptions({ weekStartsOn: 0 }, new Date()));
+  let timeStart = $state(startOfWeekWithOptions({ weekStartsOn: 0 }, new Date()));
 
   // TODO: replace this filter with a new store so we don't have to "load" the entire list of entires.
-  $: entriesPage = $entries.filter(
-    (entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt)
+  const entriesPage = $derived(
+    $entries.filter((entry: TimeEntry) => isAfter(timeStart, entry.createdAt) && isBefore(timeEnd, entry.createdAt))
   );
 
-  let currentTime = formatEntryDuration($time, unwrapMaybeOr(undefined, currentEntry));
+  const currentTime = $derived(formatEntryDuration($time, unwrapMaybeOr(undefined, currentEntry)));
+
+  let savedTitle = '';
 
   const changePage = (weeksNumber: number) => {
     timeEnd = addWeeks(weeksNumber, timeEnd);
@@ -147,14 +147,15 @@
 
   type DayOfWeek = number;
   type WeekDictionary = Record<DayOfWeek, TimeEntry[]>;
-  $: week =
+  let week = $derived(
     entriesPage?.reduce((dict, entry) => {
       const day = getDay(entry.createdAt);
       return {
         ...dict,
         [day]: [...(dict[day] || []), entry],
       };
-    }, {} as WeekDictionary) || {};
+    }, {} as WeekDictionary) || {}
+  );
 </script>
 
 <svelte:head>
@@ -217,30 +218,32 @@
       </div>
       <div>
         <a href="https://github.com/jimmyhogoboom/tempo-web" target="_blank">
-          <img
-            class="github"
-            src="github.svg"
-            alt="Github Logo"
-          />
+          <img class="github" src={github} alt="Github Logo" />
         </a>
       </div>
     </div>
   </footer>
   <Modals>
-    <div
-      slot="backdrop"
-      class="backdrop"
-      on:click={closeModal}
-      on:keyup={(e) => {
-        if (e.key === 'Escape') {
-          closeModal();
-        }
-      }}
-      role="button"
-      aria-label="Close Modal"
-      tabindex="0"
-    />
+    {#snippet backdrop()}
+      <div
+        class="backdrop"
+        onclick={closeModal}
+        onkeyup={(e) => {
+          if (e.key === 'Escape') {
+            closeModal();
+          }
+        }}
+        role="button"
+        aria-label="Close Modal"
+        tabindex="0"
+      ></div>
+    {/snippet}
   </Modals>
 </div>
 
-<style lang="scss" src="global.scss"></style>
+<style lang="scss">
+  .github {
+    max-width: 3rem;
+    filter: brightness(0) saturate(100%) contrast(50%);
+  }
+</style>
