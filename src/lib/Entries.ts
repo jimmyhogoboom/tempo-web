@@ -4,6 +4,7 @@ import replaceProps from './utils/replaceProps';
 import type { ListStorage } from '$stores/stores';
 
 export type UpdateEntryResult = Result<TimeEntry, string>;
+export type UpdateEntriesResult = Result<TimeEntry[], string> ;
 export type AddEntryResult = Result<OpenTimeEntry, string>;
 
 export const isUpdate = (newEntry?: NewTimeEntry | TimeEntryUpdate): newEntry is TimeEntryUpdate => {
@@ -85,7 +86,7 @@ export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypt
     return ok(newEntry);
   };
 
-  const updateEntries = (entryUpdates: TimeEntryUpdate[]): TimeEntry[] => {
+  const updateEntries = (entryUpdates: TimeEntryUpdate[]): UpdateEntriesResult => {
     let updates: TimeEntry[] = [];
     entries.update((es) => {
       updates = entryUpdates.reduce((_updates, entryUpdate) => {
@@ -105,7 +106,7 @@ export default function Entries(entries: ListStorage<TimeEntry>, _crypto: ICrypt
       return es;
     });
 
-    return updates;
+    return ok(updates);
   };
 
   const deleteEntry = (id: UUID) => {

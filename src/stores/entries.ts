@@ -1,5 +1,5 @@
 import Maybe from 'true-myth/maybe';
-import Entries, { type AddEntryResult, type UpdateEntryResult } from '$lib/Entries';
+import Entries, { type AddEntryResult, type UpdateEntryResult, type UpdateEntriesResult } from '$lib/Entries';
 import { createLocalStorageStore } from '$stores/stores';
 
 // An interface for the front end to access long-term storage
@@ -11,8 +11,10 @@ export const entries = {
   findOpenEntry: (): Maybe<OpenTimeEntry> => {
     return entriesStorage.findOpenEntry();
   },
-  update: (entryUpdate: TimeEntryUpdate): UpdateEntryResult => {
-    return entriesStorage.updateEntry(entryUpdate);
+  update: (entryUpdate: TimeEntryUpdate | TimeEntryUpdate[]): UpdateEntryResult | UpdateEntriesResult => {
+    return Array.isArray(entryUpdate)
+      ? entriesStorage.updateEntries(entryUpdate)
+      : entriesStorage.updateEntry(entryUpdate);
   },
   add: (newEntry: NewTimeEntry): AddEntryResult => {
     return entriesStorage.addEntry(newEntry);
