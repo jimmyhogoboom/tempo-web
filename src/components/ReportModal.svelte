@@ -45,30 +45,28 @@
   );
 </script>
 
-<div>
-  <Modal {isOpen}>
-    <div>
-      <h1>Week Total:</h1>
-      <h2>Earned: ${totalValue}</h2>
-      <h2>Logged: {formattedTime}</h2>
-    </div>
-    <hr />
-    <div>
-      {#each Object.entries(projectDictionary) as [projectId, projectEntries]}
-        <div class="project-entry">
-          <h3 class="name">{projectEntries.projectName}:</h3>
-          <div class="values">
-            <div>{formattedDuration(entriesTotalTime(projectEntries.entries, $time))}</div>
-            {#if $projects.find((p) => p.id === projectId)?.rate}
-              <div>${entriesTotalValue($projects, projectEntries.entries)}</div>
-            {/if}
-          </div>
+<Modal {isOpen}>
+  <div>
+    <h1>Week Total:</h1>
+    <h2>Earned: ${totalValue}</h2>
+    <h2>Logged: {formattedTime}</h2>
+  </div>
+  <hr />
+  <div>
+    {#each Object.entries(projectDictionary) as [projectId, projectEntries]}
+      <div class="project-entry">
+        <h3 class="name">{projectEntries.projectName}:</h3>
+        <div class="values">
+          <div>{formattedDuration(entriesTotalTime(projectEntries.entries, $time))}</div>
+          {#if $projects.find((p) => p.id === projectId)?.rate}
+            <div>${entriesTotalValue($projects, projectEntries.entries)}</div>
+          {/if}
         </div>
-      {/each}
-      <div></div>
-    </div>
-  </Modal>
-</div>
+      </div>
+    {/each}
+    <div></div>
+  </div>
+</Modal>
 
 <style lang="scss">
   @use '../styles/colors';

@@ -1,3 +1,4 @@
+// TODO: This entire thing might be able to be replaced with Repository.ts
 import Result, { ok, err } from 'true-myth/result';
 import { just, nothing } from 'true-myth/maybe';
 import replaceProps from './utils/replaceProps';

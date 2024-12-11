@@ -1,6 +1,5 @@
 import { interval, intervalToDuration, differenceInSeconds, differenceInMinutes } from 'date-fns/fp';
 import { timerFormat } from '$lib/utils/dateUtils';
-import type { NewTimeEntry, TimeEntryUpdate } from '$lib/Entries';
 
 export const formattedInterval = (start?: Date, end?: Date) =>
   timerFormat(end && start && intervalToDuration(interval(end, start)));

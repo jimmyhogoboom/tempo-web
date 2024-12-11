@@ -1,6 +1,5 @@
 <script lang="ts">
   import { closeModal } from 'svelte-modals';
-
   
   interface Props {
     // provided by Modals
